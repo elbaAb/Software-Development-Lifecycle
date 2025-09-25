@@ -1,9 +1,32 @@
-.calendar {
+* {
+    padding: 0;
+    margin: 0;
+}
+
+body{
+    overflow: hidden;
+}
+
+.main{
     display: flex;
     flex-direction: row;
+    flex-wrap: nowrap;
+}
+
+.nav-bar{
+    margin: 0;
+    display: flex;
     position: fixed;
     top: 0;
     left: 0;
+    width: 100vw;
+    height: 40px;
+    background: black;
+}
+
+.calendar {
+    display: flex;
+    flex-direction: row;
     align-items: center;
     justify-content: center;
     height: 75vh;
@@ -13,9 +36,6 @@
 .bottom-section {
     display: flex;
     flex-direction: row;
-    position: fixed;
-    bottom: 0;
-    left: 0;
     align-items: flex-start;
     justify-content: space-evenly;
     height: 25vh;
@@ -25,9 +45,6 @@
 .right-section {
     display: flex;
     flex-direction: column;
-    position: fixed;
-    right: 0;
-    top: 0;
     align-items: center;
     justify-content: center;
     height: 100vh;

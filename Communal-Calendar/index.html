@@ -2,6 +2,7 @@
 <html>
   <head>
     <meta charset="UTF-8" />
+    <link rel="stylesheet" href="base.css" />
     <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
     <meta
       http-equiv="Content-Security-Policy"
@@ -13,16 +14,30 @@
     />
     <title>Communal Calendar</title>
   </head>
-  <link rel="stylesheet" href="base.css" />
   <body>
-    <div class="calendar">
-      <div class="box" id="box1">1</div>
+    <div class = "nav-bar">
+      <div class = "nav-button" id = "friends-button">
+          
+      </div>
+      <div class = "nav-button" id = "filter-button">
+          
+      </div>
+      <div class = "nav-button" id = "events-button">
+          
+      </div>
     </div>
-    <div class="bottom-section">
-      <div class="box" id="box2">2</div>
-    </div>
-    <div class="right-section">
-      <div class="box" id="box3">3</div>
+    <div class="main">
+      <div class="calendar-container">
+        <div class="calendar">
+          <div class="box" id="box1">1</div>
+        </div>
+        <div class="bottom-section">
+          <div class="box" id="box2">2</div>
+        </div>
+      </div>
+      <div class="right-section">
+        <div class="box" id="box3">3</div>
+      </div>
     </div>
   </body> 
 </html>

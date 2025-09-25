@@ -6,6 +6,7 @@ const createWindow = () => {
     height: 600
   })
 
+  win.removeMenu()
   win.loadFile('index.html')
 }
 
