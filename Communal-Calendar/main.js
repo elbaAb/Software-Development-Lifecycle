@@ -1,4 +1,4 @@
-const { app, BrowserWindow } = require('electron')
+const { app, BrowserWindow, ipcMain } = require('electron')
 
 const createWindow = () => {
   const win = new BrowserWindow({
@@ -18,7 +18,7 @@ app.whenReady().then(() => {
   })
 })
 
-ipcMain.on('form-submission', function(){
+ipcMain.on('form-submission', function(event, EventName){
   console.log("this is the event's name ->", EventName)
 })
 
