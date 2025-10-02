@@ -18,6 +18,10 @@ app.whenReady().then(() => {
   })
 })
 
+ipcMain.on('form-submission', function(){
+  console.log("this is the event's name ->", EventName)
+})
+
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit()
 })
