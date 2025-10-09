@@ -1,4 +1,4 @@
-const { app, BrowserWindow } = require('electron')
+const { app, BrowserWindow, ipcMain } = require('electron')
 
 const createWindow = () => {
   const win = new BrowserWindow({
@@ -16,6 +16,10 @@ app.whenReady().then(() => {
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
+})
+
+ipcMain.on('form-submission', function(event, EventName){
+  console.log("this is the event's name ->", EventName)
 })
 
 app.on('window-all-closed', () => {
