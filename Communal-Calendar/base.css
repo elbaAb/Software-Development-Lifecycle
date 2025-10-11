@@ -57,8 +57,8 @@ body{
 }
 
 .box {
-    width: 100px;
-    height: 100px;
+    width: 200px;
+    height: 300px;
 }
 #box1 {
     background-color: #ffffff;
