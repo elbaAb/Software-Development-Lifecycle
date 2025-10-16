@@ -15,17 +15,69 @@
     <title>Communal Calendar</title>
   </head>
   <body>
-    <div class = "nav-bar">
-      <div class = "nav-button" id = "friends-button">
-          
-      </div>
-      <div class = "nav-button" id = "filter-button">
-          
-      </div>
-      <div class = "nav-button" id = "events-button">
-          
+    <div class="nav-bar">
+      <div class="nav-button" id="friends-button"></div>
+      <div class="nav-button" id="filter-button"></div>
+      <div class="nav-button" id="events-button"></div>
+      <div class="nav-button" id="account-button">Account ▾</div>
+    </div>
+
+  <!-- Account Dropdown-->
+    <div id="account-dropdown" class="hidden">
+      <div class="dropdown-content">
+        <h3>Category Management</h3>
+        
+        <!-- Category Creation Form -->
+        <div class="category-form">
+          <h4>Create New Category</h4>
+          <form id="category-form">
+            <div class="form-group">
+              <label for="category-name">Category Name:</label>
+              <input type="text" id="category-name" name="category-name" required>
+            </div>
+            
+            <div class="form-group">
+              <label for="category-type">Category Type:</label>
+              <select id="category-type" name="category-type">
+                <option value="primary">Primary (Color & Repeats)</option>
+                <option value="secondary">Secondary (Filter Only)</option>
+              </select>
+            </div>
+            
+            <div class="form-group" id="color-group">
+              <label for="category-color">Color:</label>
+              <input type="color" id="category-color" name="category-color" value="#3498db">
+            </div>
+
+            <div class="form-group" id="repeat-group">
+              <label for="repeat-schedule">Repeat Schedule:</label>
+              <select id="repeat-schedule" name="repeat-schedule">
+                <option value="none">No Repeat</option>
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+                <option value="yearly">Yearly</option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label for="category-image">Category Image:</label>
+              <input type="file" id="category-image" name="category-image" accept="image/*">
+              <div id="image-preview"></div>
+            </div>
+            
+            <button type="submit">Create Category</button>
+          </form>
+        </div>
+        
+        <!-- Categories List -->
+        <div class="categories-list">
+          <h4>Your Categories</h4>
+          <div id="categories-container"></div>
+        </div>
       </div>
     </div>
+
     <div class="main">
       <div class="calendar-container">
         <div class="calendar">
@@ -33,7 +85,7 @@
         </div>
         <div class="bottom-section">
           <search>
-            <form class="search-container" onsubmit="JavaScript:sendForm(event)">
+            <form class="search-container">
               <div class="search-section">
                 <div class="search-item">
                   <label for="Event">Event: </label> <input name="Event" id="Event" type="text" placeholder="Enter Event Name Here">
