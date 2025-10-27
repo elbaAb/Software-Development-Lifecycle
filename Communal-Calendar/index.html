@@ -16,6 +16,9 @@
   </head>
   <body>
     <div class = "nav-bar">
+      <div class="signInButton">
+        <button>Sign In</button>
+      </div>
       <div class = "nav-button" id = "friends-button">
           
       </div>
@@ -24,6 +27,29 @@
       </div>
       <div class = "nav-button" id = "events-button">
           
+      </div>
+      <!-- Filter Nav Button stuff -->
+      <div class="filterDropdown">
+        <button>Filter</button>
+        <div class="filterMenuStuff">
+          <label><input type="checkbox" class="category1">Cat1</label>
+          <label><input type="checkbox" class="category2">Cat2</label>
+          <label><input type="checkbox" class="category3">Cat3</label>
+        </div>
+      </div>
+      <!-- End of Filter Nav Button stuff -->
+    </div>
+    <!-- Sign in overlay -->
+    <div class = "signInPopUpOverlay">
+        <div class = "signInPopUp">
+          <span class="closeSignInPopUp">&times;</span>
+          <div class = "signInPopUpContent">
+            <p>Sign In</p>
+            <input type="text" placeholder="Username" id = "userNameInput"/>
+            <input type="password" placeholder="Password" id = "passwordInput"/>
+            <input type="submit" id = "signInSubmit">
+          </div>
+        </div>
       </div>
     </div>
     <div class="main">
@@ -138,5 +164,6 @@
       </div>
     </div>
     <script src="render.js"></script>
+    <script src="signInPopUp.js"></script>
   </body> 
 </html>
