@@ -1,3 +1,9 @@
+:root{
+    --primaryColor: #545454;
+    --backgroundColor: #2e2e2e;
+    --navBarColor: #1f1f1f;
+}
+
 * {
     padding: 0;
     margin: 0;
@@ -5,69 +11,76 @@
 
 body{
     overflow: hidden;
+    display: flex;
+    flex-direction: row;
+    background-color: var(--backgroundColor);
 }
 
 .main{
+    margin: 3px;
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     flex-wrap: nowrap;
+    height: 99vh;
+    width: 85vw;
+    flex: 0 1 auto;
 }
 
 .nav-bar{
-    margin: 0;
     display: flex;
     position: fixed;
     top: 0;
     left: 0;
     width: 100vw;
     height: 40px;
-    background: black;
+    background: var(--navBarColor);
 }
-
+.calendar-container{
+    flex: 1 1 auto;
+    width: 100%;
+    margin-bottom: 3px;
+}
 .calendar {
     display: flex;
     flex-direction: row;
     align-items: center;
     justify-content: center;
     height: 100%;
-    width: 85vw;
-    background-color: rgb(203, 203, 203);
+    width: 100%;
+    background-color: var(--primaryColor);
+    border-radius: 6px;
 }
 .bottom-section {
-    display: flex;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    flex-direction: row;
-    justify-content: space-evenly;
+    display: block;
     height: 140px;
-    width: 85vw;
-    background-color: #6b6b6b;
-    padding-top: 2px;
-    padding-bottom: 2px;   
+    width: 100%;
+    padding-top: 3px;  
+    overflow-y: hidden;
+    flex: 0 1 auto;
+    background-color: var(--primaryColor);
+    border-radius: 6px;
 }
 .right-section {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 100vh;
-    width: 15vw;
-    background-color: #888888;
+    flex: 1 1 auto;
+    background-color: var(--primaryColor);
+    border-radius: 6px;
+    margin-bottom: 3px;
+    margin-right: 3px;
+    margin-left: 1px;
 }
 
 .box {
     width: 200px;
     height: 300px;
 }
-#box1 {
-    background-color: #ffffff;
-}
-#box2 {
-    background-color: #ffffff;
-}
-#box3 {
-    background-color: #ffffff;
+.testBox{
+width: 100px;
+height: 100px;
+margin: 35px;
 }
 
 .search-section{
@@ -99,7 +112,17 @@ body{
     border-radius: 4px;
 }
 
-search{
-    width: 100%;
-    height: 100%;
+input{
+    background-color: #c9c8cc;
+    border: #1f1f1f 1px solid;
+    border-radius: 4px;
+    padding: 2px 4px;
+}
+
+input[type="radio"], input[type="checkbox"]{
+    margin-right: 5px;
+}
+
+.text-center{
+    text-align: center;
 }
