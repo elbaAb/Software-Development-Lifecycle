@@ -31,5 +31,38 @@ function formSubmit(event) {
     });
 }
 
+addEventListener("DOMContentLoaded", function(){
+    /*ipcRenderer.invoke('retrive-schedule').then((result)=>{
+        
+    })*/
+    ipcRenderer.invoke('retrive-catagories').then((result)=>{
+        const catagories = JSON.parse(result);
+        for(let catagory in catagories){
+            console.log(catagories[catagory]);
+        }
+        ApplyCatagories(catagories);
+    })
+})
+
+function ApplyCatagories(catagories){
+    for(let i = 0; i < catagories.length; i++){
+        let catagory = catagories[i]
+        const items = document.getElementsByClassName(catagory.name)
+
+        console.log(`outer loop: ${catagories[i]}`)
+
+        for(let j = 0; j < items.length; j++){
+            let item = items[j]
+            console.log(`inner loop: ${item}`)
+            item.style.backgroundColor = catagory.color
+            
+            item.innerHTML = catagory.name;
+            
+            if(catagories[i].privacy == 'private'){
+                item.style.border = "2px solid black"
+            }
+        }
+    }
+}
 //add an event listener so we can throw the above js when the submit button is clicked
-document.getElementById('get-calendar-data').addEventListener("submit",formSubmit);
+document.getElementById('get-calendar-data').addEventListener('submit',formSubmit);
