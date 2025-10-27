@@ -35,30 +35,30 @@ addEventListener("DOMContentLoaded", function(){
     /*ipcRenderer.invoke('retrive-schedule').then((result)=>{
         
     })*/
-    ipcRenderer.invoke('retrive-catagories').then((result)=>{
-        const catagories = JSON.parse(result);
-        for(let catagory in catagories){
-            console.log(catagories[catagory]);
+    ipcRenderer.invoke('retrive-categories').then((result)=>{
+        const categories = JSON.parse(result);
+        for(let category in categories){
+            console.log(categories[category]);
         }
-        ApplyCatagories(catagories);
+        ApplyCategories(categories);
     })
 })
 
-function ApplyCatagories(catagories){
-    for(let i = 0; i < catagories.length; i++){
-        let catagory = catagories[i]
-        const items = document.getElementsByClassName(catagory.name)
+function ApplyCategories(categories){
+    for(let i = 0; i < categories.length; i++){
+        let category = categories[i]
+        const items = document.getElementsByClassName(category.name)
 
-        console.log(`outer loop: ${catagories[i]}`)
+        console.log(`outer loop: ${categories[i]}`)
 
         for(let j = 0; j < items.length; j++){
             let item = items[j]
             console.log(`inner loop: ${item}`)
-            item.style.backgroundColor = catagory.color
+            item.style.backgroundColor = category.color
             
-            item.innerHTML = catagory.name;
+            item.innerHTML = category.name;
             
-            if(catagories[i].privacy == 'private'){
+            if(categories[i].privacy == 'private'){
                 item.style.border = "2px solid black"
             }
         }
