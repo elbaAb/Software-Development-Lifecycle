@@ -1,5 +1,36 @@
-const { app, BrowserWindow, ipcMain } = require('electron')
-const fs = require('fs')
+const { app, BrowserWindow, ipcMain } = require('electron');
+const fs = require('fs');
+
+const EventsFilePath = "./test/events.json";
+const CategoriesFilePath = "./test/categories.json";
+const UsersFilePath = "";
+let ExistingEvents = {};
+let ExistingCategories = {};
+let ExistingUsers = {};
+
+function IntializeCalendarObjects(filepath = "", targetContainer){
+    try {
+    if (!fs.existsSync(filepath)) { //checks to see if file exists
+      console.warn(`File ${filepath} does not exist.`);
+      targetContainer.data = [];
+      return;
+    }
+
+    const data = fs.readFileSync(filepath, 'utf8'); //reads from file
+
+    if (!data.trim()) { //makes sure file isn't empty
+      console.warn(`File ${filepath} is empty.`);
+      targetContainer.data = [];
+      return;
+    }
+
+    targetContainer.data = JSON.parse(data); //loads data from assigned path to variable
+    console.log(`Loaded ${targetContainer.data.length} items from ${filepath}`);
+  } catch (err) {
+    console.error(`Failed to initialize from ${filepath}:`, err.message);
+    targetContainer.data = []; //if error loads empty
+  }
+}
 
 const createWindow = () => { //creates the actual electron window
   const win = new BrowserWindow({
@@ -16,6 +47,14 @@ const createWindow = () => { //creates the actual electron window
 }
 
 app.whenReady().then(() => {
+  
+  IntializeCalendarObjects(EventsFilePath, ExistingEvents); //initialize objects after DOM load
+  ExistingEvents = ExistingEvents.data;
+  IntializeCalendarObjects(CategoriesFilePath, ExistingCategories);
+  ExistingCategories = ExistingCategories.data;
+  IntializeCalendarObjects(UsersFilePath, ExistingUsers);
+  ExistingUsers = ExistingUsers.data;
+
   createWindow();   //opens the window we previously created
 
   app.on('activate', () => {
@@ -27,19 +66,33 @@ app.whenReady().then(() => {
 ipcMain.handle('create-event', async (event, eventName, startDate, startTime, endTime, endDate, privacy, repeat, friendsString, separationStr) => {
   friends = friendsString.split(separationStr)    //splits string into array because API can't handle arrays
   friends.pop();    //pops the last element because it is a null entry (split)
-  eventObj = {eventName: eventName,startDate: startDate,startTime: startTime, endTime: endTime, endDate: endDate, privacy: privacy, repeat: repeat, friends: friends};    //creates an object to be JSONed
-  JSONEvent = JSON.stringify(eventObj);    //converts object to JSON
-  const filePath = "./test/output.txt";    //picks file for the JSON to be uploaded in
-  fs.appendFile(filePath, JSONEvent, 'utf8', (err) => {    //appends JSON to the specified file
+
+  ExistingEvents.push({ //taking our existing events, adding on our new one, then pushing them to file
+    eventName: eventName,
+    startDate: startDate,
+    startTime: startTime, 
+    endTime: endTime, 
+    endDate: endDate, 
+    privacy: privacy, 
+    repeat: repeat, 
+    friends: friends
+  })
+
+  ExistingEventsJSON = JSON.stringify(ExistingEvents);    //converts object to JSON
+  fs.writeFile(EventsFilePath, ExistingEventsJSON, 'utf8', (err) => {    //appends JSON to the specified file
     if (err) {
         // Handle errors
         console.error('Error writing to file:', err.message);
         return;
     }
-    console.log(`File has been written successfully to ${filePath}`);
+    console.log(`File has been written successfully to ${EventsFilePath}`);
 });
 })
 
+ipcMain.handle('retrive-categories', async => {
+  let ExistingCategoriesString = JSON.stringify(ExistingCategories)
+  return(ExistingCategoriesString);
+})
 //closes app on mac when the app is exited out of
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
