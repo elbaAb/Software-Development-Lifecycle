@@ -27,7 +27,7 @@
       <div class="dropdown-content">
         <h3>Category Management</h3>
         
-        <!-- Category Creation Form -->
+        <!-- REMOVE Category Creation Form --> 
         <div class="category-form">
           <h4>Create New Category</h4>
           <form id="category-form">
@@ -180,10 +180,38 @@
           </search>
         </div>
       </div>
-      <div class="right-section">
-        <div class="box" id="box3">3</div>
+      <<div class="right-section">
+  <div class="account-section">
+    <div class="account-header">
+      <h3>My Account</h3>
+    </div>
+    
+    <!-- Upcoming Events -->
+    <div class="upcoming-events">
+      <div class="section-header">
+        <h4>Upcoming Events</h4>
+        <span class="events-count" id="events-count">0 events</span>
+      </div>
+      
+      <div class="events-container" id="events-container">
+        <!-- Events will be populated here -->
+      </div>
+      
+      <div class="no-events hidden" id="no-events">
+        <p>No events in next 2 days</p>
       </div>
     </div>
-    <script src="./render.js"></script>
-  </body> 
-</html>
+    
+    <!-- Quick Stats -->
+    <div class="account-stats">
+      <div class="stat-item">
+        <span class="stat-number" id="total-events">0</span>
+        <span class="stat-label">Total Events</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-number" id="upcoming-count">0</span>
+        <span class="stat-label">Upcoming</span>
+      </div>
+    </div>
+  </div>
+</div>
