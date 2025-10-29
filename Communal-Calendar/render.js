@@ -2,10 +2,7 @@ const { ipcRenderer } = require('electron');
 
 function formSubmit(event) {
     event.preventDefault();    //prevents default behaviour of submit button
-    let friendsString = "";
-
-    //the string used in our split command so we can pass our accounts through the API
-    let separationStr = "@*#&^$@*#&($@#*(^%$*(@#&@#*%$*&@#)*^%&@*#$(@*#%^#@%*&@^!#&*^@#(&^$%*@$^*@%$*&^@#"    
+   
     let eventName = document.getElementById("Event").value;
     let startDate = document.getElementById("Start-Date").value;
     let startTime = document.getElementById("Start-Time").value;
@@ -15,19 +12,19 @@ function formSubmit(event) {
     let repeat = document.getElementById("Repeat").value;
     let friends = Array.from(document.querySelectorAll('input[name=Friend]:checked'))
                    .map(friend => friend.id);    //maps our selected friends IDs to an array to be stored in js
+    
     if (friends == null){
         friends = false;    //if no friends are selected return false
-    }else{
-        for(const friend in friends){//convert friend array into string w/ separator 
-            friendsString += friends[friend] + separationStr;
-        }
     }
     if (endDate == ""){
         endDate = startDate;    //if no endDate is selected return startDate
     }
 
+    let NewEvent = {eventName: eventName, startDate: startDate, startTime: startTime, endTime: endTime, endDate: endDate, privacy: privacy, repeat: repeat, friends: friends};
+
+    let StringEvent = JSON.stringify(NewEvent)
     //send all this data to main with the code of 'create-event'
-    ipcRenderer.invoke('create-event', eventName, startDate, startTime, endTime, endDate, privacy, repeat, friendsString, separationStr).then((result)=>{
+    ipcRenderer.invoke('create-event', StringEvent).then((result)=>{
     });
 }
 
