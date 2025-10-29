@@ -14,9 +14,17 @@ document.addEventListener("DOMContentLoaded", function () {
         signInOverlay.style.display = "none";
     });
     signInSubmit.addEventListener("click", function () {
-        signInOverlay.style.display = "none";
-        userNameInput.value = "";
-        passwordInput.value = "";
+        const username = userNameInput.value;
+        const password = passwordInput.value;
+        if(username && password){
+            signInOverlay.style.display = "none";
+            userNameInput.value = null;
+            passwordInput.value = null;
+            alert("Signed in as " + username);
+        }
+        else{
+            alert("Please enter a username and password.");
+        }
     });
 
 });
