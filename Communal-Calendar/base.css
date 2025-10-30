@@ -12,23 +12,27 @@
 body{
     overflow: hidden;
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
+    width: 100vw;
+    height: 100vh;
     background-color: var(--backgroundColor);
+    align-items: center;
 }
 
 .main{
-    margin: 3px;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     flex-wrap: nowrap;
-    height: 99vh;
-    width: 85vw;
-    flex: 0 1 auto;
+    width: calc(100vw - 6px);
+    flex: 1 1 auto;
+    padding-top: 3px;
+    padding-right: 1px;
+    padding-bottom: 5px;
 }
 
 .nav-bar{
     display: flex;
-    position: fixed;
+    flex: 0 1 auto;
     top: 0;
     left: 0;
     width: 100vw;
@@ -38,17 +42,19 @@ body{
     justify-content: space-evenly;
 }
 .calendar-container{
+    display: flex;
+    flex-direction: column;
     flex: 1 1 auto;
-    width: 100%;
-    margin-bottom: 3px;
+    margin-right: 3px
 }
 .calendar {
+    margin-bottom: 3px;
+    width: 100%;
+    flex: 1 1 auto;
     display: flex;
     flex-direction: row;
     align-items: center;
     justify-content: center;
-    height: 100%;
-    width: 100%;
     background-color: var(--primaryColor);
     border-radius: 6px;
 }
@@ -65,14 +71,10 @@ body{
 .right-section {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    flex: 1 1 auto;
+    flex: 0 1 auto;
+    width: 200px;
     background-color: var(--primaryColor);
     border-radius: 6px;
-    margin-bottom: 3px;
-    margin-right: 3px;
-    margin-left: 1px;
 }
 
 .box {
@@ -225,14 +227,14 @@ input[type="radio"], input[type="checkbox"]{
     color:rgb(0, 0, 0);
     padding:2.5px;
 }
-.filterDropdown .filterMenuStuff{
+.filterDropdown #filterMenuStuff{
     display: none;
     position: absolute;
     min-width: 50px;
     background-color: lightgrey;
     box-shadow: 2px 2px 5px black;
 }
-.filterDropdown:hover .filterMenuStuff{
+.filterDropdown:hover #filterMenuStuff{
     display: block;
 }
 /* End Catergory Filter CSS*/

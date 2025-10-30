@@ -30,7 +30,6 @@ function formSubmit(event) {
 
 addEventListener("DOMContentLoaded", function(){
     /*ipcRenderer.invoke('retrive-schedule').then((result)=>{
-        
     })*/
     ipcRenderer.invoke('retrive-categories').then((result)=>{
         const categories = JSON.parse(result);
@@ -38,8 +37,47 @@ addEventListener("DOMContentLoaded", function(){
             console.log(categories[category]);
         }
         ApplyCategories(categories);
+        SetFilter(categories);
     })
+
+    document.getElementById('get-calendar-data').addEventListener('submit',formSubmit);
 })
+
+function SetFilter(categories){
+    let FilterContent = document.getElementById("filterMenuStuff");
+    for(let i = 0; i < categories.length; i++){
+        let label = document.createElement("label");
+        let check = document.createElement("input");
+
+        check.checked = true;
+        check.setAttribute("type", "checkbox");
+        check.setAttribute("value", categories[i].name);
+
+        label.textContent = categories[i].name;
+        
+        console.log(label);
+        
+        FilterContent.appendChild(label);
+        label.insertBefore(check, label.firstChild);
+        check.addEventListener("change", (box) => {
+            let schedules = document.getElementsByClassName(box.target.value)
+
+            if(!box.target.checked){
+                for(let i = 0; i < schedules.length ; i++){
+                    schedules[i].style.display = "none"
+                    console.log(`Displaying none of: ${schedules[i]}`)
+                }
+            }
+            if(box.target.checked){
+                for(let i = 0; i < schedules.length; i++){
+                    schedules[i].style.display = "block"
+                    console.log(`Displaying: ${schedules[i]}`)
+                }
+            }
+        })
+        console.log(`Current box: ${check.value}`)
+    }
+}
 
 function ApplyCategories(categories){
     for(let i = 0; i < categories.length; i++){
@@ -61,5 +99,3 @@ function ApplyCategories(categories){
         }
     }
 }
-//add an event listener so we can throw the above js when the submit button is clicked
-document.getElementById('get-calendar-data').addEventListener('submit',formSubmit);

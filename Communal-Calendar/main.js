@@ -41,7 +41,7 @@ const createWindow = () => { //creates the actual electron window
       contextIsolation: false
     }
   })
-  win.webContents.openDevTools()    //opens inspect element if uncommented
+  //win.webContents.openDevTools()    //opens inspect element if uncommented
   win.removeMenu()    //removes windows hotbar for application
   win.loadFile('index.html');    //loads html
 }
