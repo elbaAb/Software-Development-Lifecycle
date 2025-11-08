@@ -97,3 +97,16 @@ ipcMain.handle('retrive-categories', async => {
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
 })
+
+// Send event list to the renderer for searching
+ipcMain.handle('get-events', async () => {
+  try {
+    if (!fs.existsSync(EventsFilePath)) return [];
+    const data = fs.readFileSync(EventsFilePath, 'utf8');
+    if (!data.trim()) return [];
+    return JSON.parse(data);
+  } catch (err) {
+    console.error("Error reading events:", err);
+    return [];
+  }
+});
