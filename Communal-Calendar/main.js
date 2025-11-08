@@ -41,7 +41,7 @@ const createWindow = () => { //creates the actual electron window
       contextIsolation: false
     }
   })
-  win.webContents.openDevTools()    //opens inspect element if uncommented
+  //win.webContents.openDevTools()    //opens inspect element if uncommented
   win.removeMenu()    //removes windows hotbar for application
   win.loadFile('index.html');    //loads html
 }
@@ -63,26 +63,27 @@ app.whenReady().then(() => {
 })
 
 //recieves data from create event button
-ipcMain.handle('create-event', async (event, eventName, startDate, startTime, endTime, endDate, privacy, repeat, friendsString, separationStr) => {
-  friends = friendsString.split(separationStr)    //splits string into array because API can't handle arrays
-  friends.pop();    //pops the last element because it is a null entry (split)
-
+ipcMain.handle('create-event', async (event, StringEvent) => {
+  NewEvent = JSON.parse(StringEvent)
+  Object.keys(NewEvent).forEach(key => {
+    console.log(`${key}: ${NewEvent[key]}`)
+  })
   ExistingEvents.push({ //taking our existing events, adding on our new one, then pushing them to file
-    eventName: eventName,
-    startDate: startDate,
-    startTime: startTime, 
-    endTime: endTime, 
-    endDate: endDate, 
-    privacy: privacy, 
-    repeat: repeat, 
-    friends: friends
+    eventName: NewEvent.eventName,
+    startDate: NewEvent.startDate,
+    startTime: NewEvent.startTime, 
+    endTime: NewEvent.endTime, 
+    endDate: NewEvent.endDate, 
+    privacy: NewEvent.privacy, 
+    repeat: NewEvent.repeat, 
+    friends: NewEvent.friends
   })
 
   ExistingEventsJSON = JSON.stringify(ExistingEvents);    //converts object to JSON
   fs.writeFile(EventsFilePath, ExistingEventsJSON, 'utf8', (err) => {    //appends JSON to the specified file
     if (err) {
         // Handle errors
-        console.error('Error writing to file:', err.message);
+        console.error(`Error writing to file: ${err.message}`);
         return;
     }
     console.log(`File has been written successfully to ${EventsFilePath}`);
