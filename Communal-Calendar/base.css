@@ -5,42 +5,47 @@
 }
 
 * {
-  padding: 0;
-  margin: 0;
+    padding: 0;
+    margin: 0;
 }
 
-
-body {
-  overflow: hidden; 
-  height: 100vh;
-  display: flex;
-  flex-direction: row;
-  background-color: var(--backgroundColor);
+body{
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    width: 100vw;
+    height: 100vh;
+    background-color: var(--backgroundColor);
+    align-items: center;
 }
 
-.main {
-  display: flex;
-  flex-direction: column;
-  flex-wrap: nowrap;
-  height: 99vh;
-  width: 85vw;
-  flex: 0 1 auto;
-  margin: 3px;
+.main{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    width: calc(100vw - 6px);
+    flex: 1 1 auto;
+    padding-top: 3px;
+    padding-right: 1px;
+    padding-bottom: 5px;
 }
 
-/* nav */
-.nav-bar {
-  margin: 0;
-  display: flex;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 40px;
-  background: var(--navBarColor);
-  align-items: center;
-  justify-content: space-evenly;
-  z-index: 10;
+.nav-bar{
+    display: flex;
+    flex: 0 1 auto;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 40px;
+    background: var(--navBarColor);
+    align-items: center;
+    justify-content: space-evenly;
+}
+.calendar-container{
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    margin-right: 3px
 }
 
 /* cal */
@@ -58,15 +63,15 @@ body {
 }
 
 .calendar {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  width: 85vw;
-  background-color: rgb(203, 203, 203);
-  align-items: center;
-  justify-content: center;
-  border-radius: 6px;
+    margin-bottom: 3px;
+    width: 100%;
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--primaryColor);
+    border-radius: 6px;
 }
 
 /* Bottom */
@@ -90,18 +95,12 @@ body {
 
 /*right*/
 .right-section {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100vh;
-  width: 15vw;
-  background-color: #888888;
-  flex: 1 1 auto;
-  border-radius: 6px;
-  margin-bottom: 3px;
-  margin-right: 3px;
-  margin-left: 1px;
+    display: flex;
+    flex-direction: column;
+    flex: 0 1 auto;
+    width: 200px;
+    background-color: var(--primaryColor);
+    border-radius: 6px;
 }
 
 .box {
@@ -328,6 +327,92 @@ input[type="radio"], input[type="checkbox"] {
   box-shadow: 2px 2px 5px black;
 }
 
-.filterDropdown:hover .filterMenuStuff {
-  display: block;
+input{
+    background-color: #c9c8cc;
+    border: #1f1f1f 1px solid;
+    border-radius: 4px;
+    padding: 2px 4px;
 }
+
+input[type="radio"], input[type="checkbox"]{
+    margin-right: 5px;
+}
+
+.text-center{
+    text-align: center;
+}
+
+.signInPopUpOverlay{
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.6);
+    z-index: 1000;
+}
+.signInPopUp{
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    width: 200px;
+    text-align: center;
+}
+
+.signInPopUp .closeSignInPopUp{
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 20px;
+    cursor: pointer;
+    color: #000000;
+}
+
+.signInPopUp #userNameInput, .signInPopUp #passwordInput{
+    width: 80%;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.signInPopUp #signInSubmit{
+    background-color: rgb(205, 205, 205);
+    color: white;
+    padding: 8px 20px;
+    border: none;
+    font-size: 10px;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+/* Category Filter CSS*/
+.filterDropdown button{
+    background-color: black;
+    color:white;
+    cursor: pointer;
+    padding:10px 15px;
+    border:none;
+}
+.filterDropdown label{
+    display:block;
+    color:rgb(0, 0, 0);
+    padding:2.5px;
+}
+.filterDropdown #filterMenuStuff{
+    display: none;
+    position: absolute;
+    min-width: 50px;
+    background-color: lightgrey;
+    box-shadow: 2px 2px 5px black;
+}
+.filterDropdown:hover #filterMenuStuff{
+    display: block;
+}
+/* End Catergory Filter CSS*/
