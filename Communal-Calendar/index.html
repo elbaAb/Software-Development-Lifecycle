@@ -16,64 +16,29 @@
   </head>
   <body>
     <div class="nav-bar">
+      <div class="signInButton">
+        <button>Sign In</button>
+      </div>
       <div class="nav-button" id="friends-button"></div>
       <div class="nav-button" id="filter-button"></div>
       <div class="nav-button" id="events-button"></div>
-      <div class="nav-button" id="account-button">Account ▾</div>
+
+     
+      <div class="filterDropdown">
+        <button>Filter</button>
+        <div id="filterMenuStuff">
+        </div>
+      </div>
     </div>
 
-  <!-- Account Dropdown-->
-    <div id="account-dropdown" class="hidden">
-      <div class="dropdown-content">
-        <h3>Category Management</h3>
-        
-        <!-- REMOVE Category Creation Form --> 
-        <div class="category-form">
-          <h4>Create New Category</h4>
-          <form id="category-form">
-            <div class="form-group">
-              <label for="category-name">Category Name:</label>
-              <input type="text" id="category-name" name="category-name" required>
-            </div>
-            
-            <div class="form-group">
-              <label for="category-type">Category Type:</label>
-              <select id="category-type" name="category-type">
-                <option value="primary">Primary (Color & Repeats)</option>
-                <option value="secondary">Secondary (Filter Only)</option>
-              </select>
-            </div>
-            
-            <div class="form-group" id="color-group">
-              <label for="category-color">Color:</label>
-              <input type="color" id="category-color" name="category-color" value="#3498db">
-            </div>
-
-            <div class="form-group" id="repeat-group">
-              <label for="repeat-schedule">Repeat Schedule:</label>
-              <select id="repeat-schedule" name="repeat-schedule">
-                <option value="none">No Repeat</option>
-                <option value="daily">Daily</option>
-                <option value="weekly">Weekly</option>
-                <option value="monthly">Monthly</option>
-                <option value="yearly">Yearly</option>
-              </select>
-            </div>
-            
-            <div class="form-group">
-              <label for="category-image">Category Image:</label>
-              <input type="file" id="category-image" name="category-image" accept="image/*">
-              <div id="image-preview"></div>
-            </div>
-            
-            <button type="submit">Create Category</button>
-          </form>
-        </div>
-        
-        <!-- Categories List -->
-        <div class="categories-list">
-          <h4>Your Categories</h4>
-          <div id="categories-container"></div>
+    <div class="signInPopUpOverlay">
+      <div class="signInPopUp">
+        <span class="closeSignInPopUp">&times;</span>
+        <div class="signInPopUpContent">
+          <p>Sign In</p>
+          <input type="text" placeholder="Username" id="userNameInput" />
+          <input type="password" placeholder="Password" id="passwordInput" />
+          <input type="submit" id="signInSubmit" />
         </div>
       </div>
     </div>
@@ -81,137 +46,128 @@
     <div class="main">
       <div class="calendar-container">
         <div class="calendar">
-          <div class="box" id="box1">1</div>
+          <div class="calendar-section">
+            <div class="calendar-box" id="calendarBox">
+              <div class="calendar-grid" id="calendarGrid"></div>
+            </div>
+          </div>
+
+         <!---- <div class="School testBox">1</div>
+          <div class="Work testBox">1</div>
+          <div class="Family testBox">1</div>--->
         </div>
-        <div class="bottom-section">
-          <search>
-            <form class="search-container">
-              <div class="search-section">
-                <div class="search-item">
-                  <label for="Event">Event: </label> <input name="Event" id="Event" type="text" placeholder="Enter Event Name Here">
-                </div>
-                
-                <div class="search-item">
-                  <label for="Start-Date">Start Date: </label> <input name="Start-Date" id="Start-Date" type="date">
-                </div>
-                
-                <div class="search-item">
-                  <label for="Start-Time">Start Time: </label> <input name="Start-Time" id="Start-Time" type="time">
-                </div>
-                
-                <div class="search-item">
-                  <label for="End-Time">End Time: </label> <input name="End-Time" id="End-Time" type="time">
-                </div>
-                
-                <div class="search-item">
-                  <label for="End-Date">Final Repeat: </label> <input name="End-Date" id="End-Date" type="date">
-                </div>
+        <search class="bottom-section">
+          <form class="search-container" id="get-calendar-data">
+            <div class="search-section">
+              <div class="search-item">
+                <label for="Event">Event: </label> <input name="Event" id="Event" type="text" placeholder="Enter Event Name Here">
               </div>
-              <div class="search-section">
-                <div class="search-item">
-                  <label>Privacy:</label>
-                </div>
-
-                <div class="search-item">
-                    <input type="radio" name="Privacy" id="Privacy-Public"> <label for="Privacy-Friends">Friends</label>
-                </div>
-
-                <div class="search-item">
-                    <input type="radio" name="Privacy" id="Privacy-Favorite"> <label for="Privacy-Favorite">Favorites Only</label>
-                </div>
-
-                <div class="search-item">
-                    <input type="radio" name="Privacy" id="Privacy-Private"> <label for="Privacy-Private">Private</label>
-                </div>
-                <div class="search-item">
-                  <label for="Repeat">Repeat Frequency</label>
-                </div>
-                <div class="search-item">
-                  <select name="Repeat" id="Repeat">
-                    <option value="One-Time">One-Time</option>
-                    <option value="Daily">Daily</option>
-                    <option value="Weekly">Weekly</option>
-                    <option value="Biweekly">Biweekly</option>
-                    <option value="Monthly">Monthly</option>
-                    <option value="Bimonthly">Bimonthly</option>
-                    <option value="Biannualy">Biannualy</option>
-                    <option value="Annualy">Annualy</option>
-                  </select>
-                </div>
-              </div>
-              <div class="search-section">
-                <div class="search-item">
-                  <input type="text" name="Search-Friends" id="Search-Friends" placeholder="Include friends">
-                </div>
                 
-                <div class="search-item">
-                  <div class="search-friends-section">
-                    <div class="search-section">
-                      <input type="checkbox" name="Friend" id="friend1"><label for="friend1">Friend 1</label>
-                    </div>
-                    <div class="search-section">
-                      <input type="checkbox" name="Friend" id="friend2"><label for="friend2">Friend 2</label>
-                    </div>
-                    <div class="search-section">
-                      <input type="checkbox" name="Friend" id="friend3"><label for="friend3">Friend 3</label>
-                    </div>
-                    <div class="search-section">
-                      <input type="checkbox" name="Friend" id="friend4"><label for="friend4">Friend 4</label>
-                    </div>
-                    <div class="search-section">
-                      <input type="checkbox" name="Friend" id="friend5"><label for="friend5">Friend 5</label>
-                    </div>
-                    <div class="search-section">
-                      <input type="checkbox" name="Friend" id="friend6"><label for="friend6">Friend 6</label>
-                    </div>
-                    <div class="search-section">
-                      <input type="checkbox" name="Friend" id="friend7"><label for="friend7">Friend 7</label>
-                    </div>
-                    <div class="search-section">
-                      <input type="checkbox" name="Friend" id="friend8"><label for="friend8">Friend 8</label>
-                    </div>
+              <div class="search-item">
+                <label for="Start-Date">Start Date: </label> <input name="Start-Date" id="Start-Date" type="date">
+              </div>
+              
+              <div class="search-item">
+                <label for="Start-Time">Start Time: </label> <input name="Start-Time" id="Start-Time" type="time">
+              </div>
+              <div class="search-item">
+                <label for="End-Time">End Time: </label> <input name="End-Time" id="End-Time" type="time">
+              </div>
+                
+              <div class="search-item">
+                <label for="End-Date">Final Repeat: </label> <input name="End-Date" id="End-Date" type="date">
+              </div>
+            </div>
+            <div class="search-section">
+              <div class="search-item">
+                <label>Privacy:</label>
+              </div>
+
+              <div class="search-item">
+                  <input type="radio" name="Privacy" id="Privacy-Public" checked> <label for="Privacy-Friends">Friends</label>
+              </div>
+
+              <div class="search-item">
+                  <input type="radio" name="Privacy" id="Privacy-Favorite"> <label for="Privacy-Favorite">Favorites Only</label>
+              </div>
+
+              <div class="search-item">
+                  <input type="radio" name="Privacy" id="Privacy-Private"> <label for="Privacy-Private">Private</label>
+              </div>
+              <div class="search-item">
+                <label for="Repeat">Repeat Frequency</label>
+              </div>
+              <div class="search-item">
+                <select name="Repeat" id="Repeat">
+                  <option value="One-Time">One-Time</option>
+                  <option value="Daily">Daily</option>
+                <option value="Weekly">Weekly</option>
+                  <option value="Biweekly">Biweekly</option>
+                  <option value="Monthly">Monthly</option>
+                  <option value="Bimonthly">Bimonthly</option>
+                  <option value="Biannualy">Biannualy</option>
+                  <option value="Annualy">Annualy</option>
+                </select>
+              </div>
+            </div>
+            <div class="search-section">
+              <div class="search-item">
+                <input type="text" name="Search-Friends" id="Search-Friends" placeholder="Include friends">
+              </div>
+                
+              <div class="search-item">
+                <div class="search-friends-section">
+                  <div class="search-section">
+                    <input type="checkbox" name="Friend" id="friend1"><label for="friend1">Friend 1</label>
+                  </div>
+                  <div class="search-section">
+                    <input type="checkbox" name="Friend" id="friend2"><label for="friend2">Friend 2</label>
+                  </div>
+                  <div class="search-section">
+                  <input type="checkbox" name="Friend" id="friend3"><label for="friend3">Friend 3</label>
+                  </div>
+                  <div class="search-section">
+                    <input type="checkbox" name="Friend" id="friend4"><label for="friend4">Friend 4</label>
+                  </div>
+                  <div class="search-section">
+                    <input type="checkbox" name="Friend" id="friend5"><label for="friend5">Friend 5</label>
+                  </div>
+                  <div class="search-section">
+                    <input type="checkbox" name="Friend" id="friend6"><label for="friend6">Friend 6</label>
+                  </div>
+                  <div class="search-section">
+                    <input type="checkbox" name="Friend" id="friend7"><label for="friend7">Friend 7</label>
+                  </div>
+                  <div class="search-section">
+                    <input type="checkbox" name="Friend" id="friend8"><label for="friend8">Friend 8</label>
                   </div>
                 </div>
               </div>
-              <div class="search-section">
-                <input type="submit" value="Submit">
-              </div>
-            </form>
-          </search>
+            </div>
+            <div class="search-section">
+              <input class="text-center" type="submit" value="submit">
+            </div>
+          </form>
+        </search>
+      </div>
+      <div class="right-section text-center">
+        <div class="box" id="box3">
+        <!-- Box A: Next Event Today -->
+          <div class="box" id="today-box">
+            <h3>Next Event Today</h3>
+            <input
+              id="events-search"
+              type="search"
+              placeholder="Search by title, date, time..."
+              aria-label="Search events"
+            />
+            <div id="today-event" aria-live="polite">Loading…</div>
+          </div>
         </div>
       </div>
-      <<div class="right-section">
-  <div class="account-section">
-    <div class="account-header">
-      <h3>My Account</h3>
+
     </div>
-    
-    <!-- Upcoming Events -->
-    <div class="upcoming-events">
-      <div class="section-header">
-        <h4>Upcoming Events</h4>
-        <span class="events-count" id="events-count">0 events</span>
-      </div>
-      
-      <div class="events-container" id="events-container">
-        <!-- Events will be populated here -->
-      </div>
-      
-      <div class="no-events hidden" id="no-events">
-        <p>No events in next 2 days</p>
-      </div>
-    </div>
-    
-    <!-- Quick Stats -->
-    <div class="account-stats">
-      <div class="stat-item">
-        <span class="stat-number" id="total-events">0</span>
-        <span class="stat-label">Total Events</span>
-      </div>
-      <div class="stat-item">
-        <span class="stat-number" id="upcoming-count">0</span>
-        <span class="stat-label">Upcoming</span>
-      </div>
-    </div>
-  </div>
-</div>
+    <script src="render.js"></script>
+    <script src="signInPopUp.js"></script>
+  </body>
+</html>

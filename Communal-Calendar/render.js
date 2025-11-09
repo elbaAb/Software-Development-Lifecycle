@@ -1,188 +1,144 @@
-const ipcRenderer = require('electron').ipcRenderer;
+const { ipcRenderer } = require('electron');
 
-function sendForm(event) {
-    event.preventDefault() // stop the form from submitting
-    let EventName = document.getElementById("Event").value;
-    ipcRenderer.send('form-submission', EventName)
+function formSubmit(event) {
+  event.preventDefault(); //prevents default behaviour of submit button
+
+  let eventName = document.getElementById("Event").value;
+  let startDate = document.getElementById("Start-Date").value;
+  let startTime = document.getElementById("Start-Time").value;
+  let endTime = document.getElementById("End-Time").value;
+  let endDate = document.getElementById("End-Date").value;
+  let privacy = document.querySelector("input[name=Privacy]:checked")?.id || "public";
+  let repeat = document.getElementById("Repeat").value;
+  let friends = Array.from(document.querySelectorAll('input[name=Friend]:checked'))
+    .map(friend => friend.id); //maps our selected friends IDs to an array to be stored in js
+
+  if (friends == null || friends.length === 0) {
+    friends = false; //if no friends are selected return false
+  }
+  if (endDate == "") {
+    endDate = startDate; //if no endDate is selected return startDate
+  }
+
+  //the event object as created by the form
+  let NewEvent = {
+    Name: eventName,
+    "Start Date": startDate,
+    "Time start": startTime,
+    "Time end": endTime,
+    "End Date": endDate,
+    Privacy: privacy,
+    "Repeat Frequency": repeat,
+    Friends: friends
+  };
+
+  let StringEvent = JSON.stringify(NewEvent);
+  //send all this data to main with the code of 'create-event'
+  ipcRenderer.invoke('create-event', StringEvent).then((result) => { });
 }
 
-// ========== UPCOMING EVENTS FUNCTIONALITY ==========
+addEventListener("DOMContentLoaded", function(){
+    /*ipcRenderer.invoke('retrive-schedule').then((result)=>{
+    })*/
+    ipcRenderer.invoke('retrive-categories').then((result)=>{
+        const categories = JSON.parse(result);
+        for(let category in categories){
+            console.log(categories[category]);
+        }
+        ApplyCategories(categories);
+        SetFilter(categories);
+    })
 
-// Sample events data (replace with your actual data source)
-const sampleEvents = [
-  { id: 1, title: "Team Meeting", datetime: new Date(Date.now() + 2 * 60 * 60 * 1000), location: "Conference Room A" },
-  { id: 2, title: "Lunch with Friends", datetime: new Date(Date.now() + 24 * 60 * 60 * 1000), location: "Central Park" },
-  { id: 3, title: "Doctor Appointment", datetime: new Date(Date.now() + 40 * 60 * 60 * 1000), location: "Medical Center" },
-  { id: 4, title: "Birthday Party", datetime: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), location: "John's House" }
-];
+    document.getElementById('get-calendar-data').addEventListener('submit',formSubmit);
+})
 
-function loadUpcomingEvents() {
-  const now = new Date();
-  const twoDaysFromNow = new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000);
-  
-  // Filter events for next 2 days
-  const upcomingEvents = sampleEvents.filter(event => 
-    event.datetime >= now && event.datetime <= twoDaysFromNow
-  ).sort((a, b) => a.datetime - b.datetime); // Sort by closest first
-  
-  const eventsContainer = document.getElementById('events-container');
-  const noEvents = document.getElementById('no-events');
-  const eventsCount = document.getElementById('events-count');
-  const upcomingCount = document.getElementById('upcoming-count');
-  const totalEvents = document.getElementById('total-events');
-  
-  // Update counts
-  eventsCount.textContent = `${upcomingEvents.length} event${upcomingEvents.length !== 1 ? 's' : ''}`;
-  upcomingCount.textContent = upcomingEvents.length;
-  totalEvents.textContent = sampleEvents.length;
-  
-  // Clear container
-  eventsContainer.innerHTML = '';
-  
-  if (upcomingEvents.length === 0) {
-    noEvents.classList.remove('hidden');
-    return;
+function SetFilter(categories){
+    let FilterContent = document.getElementById("filterMenuStuff");
+    for(let i = 0; i < categories.length; i++){
+        let label = document.createElement("label");
+        let check = document.createElement("input");
+
+        check.checked = true;
+        check.setAttribute("type", "checkbox");
+        check.setAttribute("value", categories[i].name);
+
+        label.textContent = categories[i].name;
+        
+        console.log(label);
+        
+        FilterContent.appendChild(label);
+        label.insertBefore(check, label.firstChild);
+        check.addEventListener("change", (box) => {
+            let schedules = document.getElementsByClassName(box.target.value)
+
+            if(!box.target.checked){
+                for(let i = 0; i < schedules.length ; i++){
+                    schedules[i].style.display = "none"
+                    console.log(`Displaying none of: ${schedules[i]}`)
+                }
+            }
+            if(box.target.checked){
+                for(let i = 0; i < schedules.length; i++){
+                    schedules[i].style.display = "block"
+                    console.log(`Displaying: ${schedules[i]}`)
+                }
+            }
+        })
+        console.log(`Current box: ${check.value}`)
+    }
+}
+
+function ApplyCategories(categories){
+    for(let i = 0; i < categories.length; i++){
+        let category = categories[i]
+        const items = document.getElementsByClassName(category.name)
+
+        console.log(`outer loop: ${categories[i]}`)
+
+        for(let j = 0; j < items.length; j++){
+            let item = items[j]
+            console.log(`inner loop: ${item}`)
+            item.style.backgroundColor = category.color
+            
+            item.innerHTML = category.name;
+            
+            if(categories[i].privacy == 'private'){
+                item.style.border = "2px solid black"
+            }
+        }
+    }
   }
-  
-  noEvents.classList.add('hidden');
-  
-  // Add events to container
-  upcomingEvents.forEach((event, index) => {
-    const eventElement = document.createElement('div');
-    eventElement.className = `event-item ${index === 0 ? 'next-upcoming' : ''}`;
-    
-    const timeString = event.datetime.toLocaleDateString('en-US', {
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-    
-    eventElement.innerHTML = `
-      <div class="event-title">${event.title}</div>
-      <div class="event-datetime">${timeString}</div>
-      <div class="event-location">📍 ${event.location}</div>
-    `;
-    
-    eventsContainer.appendChild(eventElement);
+}
+//add an event listener so we can throw the above js when the submit button is clicked
+document.getElementById('get-calendar-data').addEventListener('submit',formSubmit);
+
+// --- Event Search Functionality ---
+const searchInput = document.getElementById("events-search");
+const todayEventDiv = document.getElementById("today-event");
+
+// Listen for typing in the search bar
+if (searchInput) {
+  searchInput.addEventListener("input", async () => {
+    const query = searchInput.value.toLowerCase().trim();
+    const events = await ipcRenderer.invoke("get-events");
+    const filtered = events.filter(ev =>
+      ev.eventName.toLowerCase().includes(query) ||
+      ev.startDate.toLowerCase().includes(query) ||
+      ev.startTime.toLowerCase().includes(query) ||
+      ev.endTime.toLowerCase().includes(query)
+    );
+
+    // Clear and re-display results
+    todayEventDiv.innerHTML = "";
+    if (filtered.length === 0) {
+      todayEventDiv.textContent = "No matching events found.";
+    } else {
+      filtered.forEach(ev => {
+        const item = document.createElement("div");
+        item.textContent = `${ev.eventName || "(Unnamed Event)"} — ${ev.startDate || "No Date"} ${ev.startTime || ""}`;
+        item.classList.add("event-item");
+        todayEventDiv.appendChild(item);
+      });
+    }
   });
 }
-
-// ========== ACCOUNT TAB FUNCTIONALITY ==========
-document.addEventListener('DOMContentLoaded', function() {
-    const accountButton = document.getElementById('account-button');
-    const accountDropdown = document.getElementById('account-dropdown');
-    const categoryForm = document.getElementById('category-form');
-    const categoryTypeSelect = document.getElementById('category-type');
-    const colorGroup = document.getElementById('color-group');
-    const repeatGroup = document.getElementById('repeat-group');
-    const categoryImageInput = document.getElementById('category-image');
-    const imagePreview = document.getElementById('image-preview');
-    const categoriesContainer = document.getElementById('categories-container');
-
-    let categories = [];
-
-    // Initialize upcoming events
-    loadUpcomingEvents();
-
-    // Show/hide account dropdown
-    accountButton.addEventListener('click', function(e) {
-        e.stopPropagation(); // Prevent the click from bubbling up
-        accountDropdown.classList.toggle('hidden');
-    });
-
-    // Close dropdown when clicking outside
-    document.addEventListener('click', function() {
-        accountDropdown.classList.add('hidden');
-    });
-
-    // Prevent dropdown from closing when clicking inside it
-    accountDropdown.addEventListener('click', function(e) {
-        e.stopPropagation();
-    });
-
-    // Show/hide color picker and repeat schedule based on category type
-    categoryTypeSelect.addEventListener('change', function() {
-        if (this.value === 'primary') {
-            colorGroup.style.display = 'block';
-            repeatGroup.style.display = 'block';
-        } else {
-            colorGroup.style.display = 'none';
-            repeatGroup.style.display = 'none';
-        }
-    });
-
-    // Image preview functionality
-    categoryImageInput.addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                imagePreview.innerHTML = `<img src="${e.target.result}" alt="Category preview">`;
-            };
-            reader.readAsDataURL(file);
-        }
-    });
-
-    // Handle category form submission
-    categoryForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const categoryName = document.getElementById('category-name').value;
-        const categoryType = document.getElementById('category-type').value;
-        const categoryColor = document.getElementById('category-color').value;
-        const repeatSchedule = document.getElementById('repeat-schedule').value;
-        const categoryImage = categoryImageInput.files[0];
-
-        // Create category object
-        const category = {
-            id: Date.now(),
-            name: categoryName,
-            type: categoryType,
-            color: categoryType === 'primary' ? categoryColor : null,
-            repeatSchedule: categoryType === 'primary' ? repeatSchedule : null,
-            image: categoryImage ? URL.createObjectURL(categoryImage) : null
-        };
-
-        // Add to categories array
-        categories.push(category);
-
-        // Update UI
-        renderCategories();
-
-        // Reset form
-        categoryForm.reset();
-        imagePreview.innerHTML = '';
-        colorGroup.style.display = 'block';
-        repeatGroup.style.display = 'block';
-    });
-
-    // Render categories list
-    function renderCategories() {
-        categoriesContainer.innerHTML = '';
-        
-        categories.forEach(category => {
-            const categoryElement = document.createElement('div');
-            categoryElement.className = 'category-item';
-            categoryElement.innerHTML = `
-                ${category.color ? `<div class="category-color" style="background-color: ${category.color}"></div>` : ''}
-                <div class="category-name">${category.name}</div>
-                <div class="category-type">${category.type}</div>
-                ${category.repeatSchedule ? `<div class="repeat-schedule">Repeats: ${category.repeatSchedule}</div>` : ''}
-                ${category.image ? `<img src="${category.image}" alt="${category.name}" style="width: 20px; height: 20px; margin-left: 5px;">` : ''}
-                <button onclick="deleteCategory(${category.id})" style="margin-left: 5px; background: red; padding: 2px 5px; font-size: 0.7em;">Delete</button>
-            `;
-            categoriesContainer.appendChild(categoryElement);
-        });
-    }
-
-    // Delete category function (needs to be global)
-    window.deleteCategory = function(categoryId) {
-        categories = categories.filter(cat => cat.id !== categoryId);
-        renderCategories();
-    };
-
-    // Refresh events every minute to update "next upcoming" highlighting
-    setInterval(loadUpcomingEvents, 60000);
-});
