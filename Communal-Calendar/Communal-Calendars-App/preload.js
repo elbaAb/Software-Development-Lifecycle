@@ -9,9 +9,6 @@ contextBridge.exposeInMainWorld("electronAPI", {    //exposes certain api featur
   getCategories: (username, accessToken) => ipcRenderer.invoke("retrieve-categories", { username, accessToken }),
   getEvents: (username, accessToken) => ipcRenderer.invoke("get-events", { username, accessToken }),
   createEvent: (username, eventData, accessToken) => ipcRenderer.invoke("create-event", { username, eventData, accessToken }),
-  loginUser: (username, password) => ipcRenderer.invoke("login-user", { username, password}),
-  registerUser: (email, username, password) => ipcRenderer.invoke("register-user", { email, username, password }),
-  requestFriend: (requester, requestee, accessToken) => ipcRenderer.invoke("request-friend", { requester, requestee, accessToken}),
-  acceptFriend: (requester, requestee, accessToken) => ipcRenderer.invoke("accept-friend", { requester, requestee, accessToken}),
-  denyFriend: (requester, requestee, accessToken) => ipcRenderer.invoke("deny-friend", { requester, requestee, accessToken})
-})
+  loginUser: (username, password) => ipcRenderer.invoke("login-user", { username, password })
+
+});
