@@ -7,9 +7,6 @@ function loadJson(filePath) {
   if (!fs.existsSync(filePath)) return {};
   try {
     const data = fs.readFileSync(filePath, "utf8");
-    if(!data){
-      return ({})
-    }
     return JSON.parse(data);
   } catch (err) {
     console.error(`Error loading JSON from ${filePath}:`, err);

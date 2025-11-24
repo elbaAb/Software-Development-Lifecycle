@@ -1,12 +1,10 @@
 [
   {
-    "username": "demo",
-    "password": "$2b$12$HXaKGXIugG55Jcxek2zJs.7JL23Bvk66cuLl8pxD50cTS33VhL6Ji",
-    "email": "email@email.com"
+    "username": "brent",
+    "password": "MyPass123"
   },
   {
-    "username": "demo2",
-    "password": "$2b$12$J3OO/TI90hVzmstPJp7iRO7MIzxYakAQvcKVbBcpD.x5Z/CvKjB6W",
-    "email": "email@email.comm"
+    "username": "demo",
+    "password": "demo123"
   }
 ]

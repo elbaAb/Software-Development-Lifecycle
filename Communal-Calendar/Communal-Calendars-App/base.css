@@ -238,7 +238,3 @@ input[type="radio"], input[type="checkbox"]{
     display: block;
 }
 /* End Catergory Filter CSS*/
-
-#emailInput{
-    display: none;
-}
