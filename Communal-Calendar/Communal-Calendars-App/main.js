@@ -2,7 +2,8 @@ const { app, BrowserWindow } = require("electron");         //makes sure electri
 const path = require("path");                               //initializes path
 const { initializeCalendarData } = require("./calendar");   //creates the calendar inizialization function
 const axios = require("axios");                             //requires the ability to send to remote server
-const { ipcMain } = require("electron");                    
+const { ipcMain } = require("electron");
+                  
 
 function createWindow() {                           //creates the window object with below settings
   const win = new BrowserWindow({
@@ -29,14 +30,6 @@ app.whenReady().then(() => {    //when the app is ready does:
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") app.quit();    //if on mac doesn't close app if all windows are closed like native applications
 });
-
-
-
-
-
-
-
-
 
 
 
@@ -100,6 +93,23 @@ ipcMain.handle("retrieve-categories", async (event, { username, accessToken }) =
     return response.data;
   } catch (err) {
     console.error("Failed to retrieve categories:", err.message);
+    throw err;
+  }
+});
+
+ipcMain.handle("create-category", async (event, { username, category, accessToken }) => {
+  console.log("Made it to main");
+  try {
+    const response = await axios.post(`http://localhost:3000/calendar/categories/${username}`, category,{
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`
+        }
+      }
+    );
+    return response.data;
+  } catch (err) {
+    console.error("Create category failed:", err.message);
     throw err;
   }
 });

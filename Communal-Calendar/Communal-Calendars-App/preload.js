@@ -4,11 +4,10 @@
     any other file not directly imported through main.
 */
 const { contextBridge, ipcRenderer } = require("electron"); //imports context bridge via electron
-
 contextBridge.exposeInMainWorld("electronAPI", {    //exposes certain api features to renderer
   getCategories: (username, accessToken) => ipcRenderer.invoke("retrieve-categories", { username, accessToken }),
   getEvents: (username, accessToken) => ipcRenderer.invoke("get-events", { username, accessToken }),
   createEvent: (username, eventData, accessToken) => ipcRenderer.invoke("create-event", { username, eventData, accessToken }),
-  loginUser: (username, password) => ipcRenderer.invoke("login-user", { username, password })
-
+  loginUser: (username, password) => ipcRenderer.invoke("login-user", { username, password }),
+  createCategory: (username, category, accessToken) => ipcRenderer.invoke("create-category", { username, category, accessToken })
 });

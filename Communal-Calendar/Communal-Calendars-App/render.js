@@ -10,9 +10,105 @@ function formSubmit(event) {
   const repeat = document.getElementById("Repeat").value;
   const friends = Array.from(document.querySelectorAll("input[name=Friend]:checked")).map(f => f.id) || false;
 
-  const NewEvent = { eventName, startDate, startTime, endTime, endDate, privacy, repeat, friends };
+  //Assigning corresponding days to numbers
+  const dayMap = {
+    sunday: 0,
+    monday: 1,
+    tuesday: 2,
+    wednesday: 3,
+    thursday: 4,
+    friday: 5,
+    saturday: 6
+  };
+  const selectedDays = Array.from(document.querySelectorAll('input[name=Day]:checked')).map(day => dayMap[day.id]); //Similar to friends, maps the selected days to their numbers
 
+  //Splits time strings into hours and minutes (11:30 -> startHour = 11 and startMinute = 30) and converts them to numbers
+  const [startHour, startMinute] = startTime.split(':').map(Number);
+  const [endHour, endMinute] = endTime.split(':').map(Number);
+
+  //Doing the same for the actual date and creates the starting date for the loop
+  let [y, m, d] = startDate.split('-').map(Number);
+  let currentDate = new Date(y, m-1, d); //No idea why month was added by 1 by default but just subtracting 1 fixes it
+
+  //Same for end date
+  const [endY, endM, endD] = endDate.split('-').map(Number);
+  const lastDate = new Date(endY, endM-1, endD); //Same here
+
+  //Array to cast to JSON
+  const eventDates = [];
+
+  while (currentDate <= lastDate) {
+    if (selectedDays.includes(currentDate.getDay())) {
+            
+      //Creating the start and end dates then setting their hours and minutes (The 0 are for seconds and milliseconds)
+      let startDateTime = new Date(currentDate);
+      startDateTime.setHours(startHour, startMinute, 0, 0);
+
+      let endDateTime = new Date(currentDate);
+      endDateTime.setHours(endHour, endMinute, 0, 0);
+
+      //This puts the date into the array created earlier in local time using toLocaleString()
+      eventDates.push({ start: startDateTime.toLocaleString(), end: endDateTime.toLocaleString()});
+    }
+    currentDate.setDate(currentDate.getDate() + 1); //Gets the next date
+  }
+
+  const NewEvent = { eventName, startDate, startTime, endTime, endDate, privacy, repeat, friends, eventDates};
+
+  
   createEvent(sessionStorage.getItem("username"), NewEvent);
+}
+
+function setupFilterCheckbox(checkbox, categoryName) {
+  if (!checkbox) return;
+  if (!checkbox.value) checkbox.value = categoryName;
+  if (!categoryName) categoryName = checkbox.value || checkbox.id;
+  if (checkbox.dataset.listenerAttached === "true") {
+    const show = checkbox.checked;
+    const elems = document.getElementsByClassName(categoryName);
+    Array.from(elems).forEach(el => {
+      el.style.display = show ? "" : "none";
+    });
+
+    const boxes = document.querySelectorAll('.category-box');
+    boxes.forEach(box => {
+      if (box.dataset.categoryName === categoryName) {
+        box.style.display = show ? "inline-block" : "none";
+      }
+    });
+    return;
+  }
+
+  const onChange = () => {
+    const show = checkbox.checked;
+
+    const elems = document.getElementsByClassName(categoryName);
+    Array.from(elems).forEach(el => {
+      el.style.display = show ? "" : "none";
+    });
+
+    const boxes = document.querySelectorAll('.category-box');
+    boxes.forEach(box => {
+      if (box.dataset.categoryName === categoryName) {
+        box.style.display = show ? "inline-block" : "none";
+      }
+    });
+  };
+
+  checkbox.addEventListener("change", onChange);
+  checkbox.dataset.listenerAttached = "true";
+  onChange();
+}
+
+function setupAllFilterCheckboxes() {
+  const filterMenu = document.getElementById("filterMenuStuff");
+  if (!filterMenu) return;
+  const checkboxes = filterMenu.querySelectorAll('input[type="checkbox"]');
+  checkboxes.forEach(cb => {
+    if (cb.id === "addCategoryBtn") return;
+    const name = cb.value || cb.id;
+    setupFilterCheckbox(cb, name);
+  });
 }
 
 //creates the filter checkboxes in the top right
@@ -27,12 +123,9 @@ function SetFilter(categories) {
     label.textContent = category.name;
     label.insertBefore(check, label.firstChild);
     FilterContent.appendChild(label);
-    check.addEventListener("change", () => {
-      const schedules = document.getElementsByClassName(category.name);
-      Array.from(schedules).forEach(schedule => {
-        schedule.style.display = check.checked ? "block" : "none";
-      });
-    });
+
+    // use centralized wiring so both schedule items and boxes are toggled
+    setupFilterCheckbox(check, category.name);
   });
 }
 
@@ -86,6 +179,112 @@ function setupSignInPopup() {
     });
   }
 }
+// Add Category popup logic
+function setupAddCategoryPopup() {
+  const addCategoryButton = document.querySelector("#addCategoryBtn");
+  const addCategoryOverlay = document.querySelector(".addCategoryPopupOverlay");
+  const closePopup = document.querySelector(".closeAddCategoryPopUp");
+  const saveCategoryButton = document.querySelector("#saveCategoryBtn");
+  const categoryNameInput = document.querySelector("#newCategoryInput");
+  const categoryColorInput = document.querySelector("#newCategoryColor");
+  const categoryPrivacyInputs = document.querySelector("#catPrivacy");
+  const filterMenu = document.querySelector("#filterMenuStuff");
+  const categoryDisplay = document.getElementById("category-display") || document.querySelector(".main");
+
+  //This just gets a contrasting color (black or white) based on the background color provided
+  function getContrastColor(hex) {
+    try {
+      const c = hex.replace("#", "");
+      const r = parseInt(c.substr(0,2),16);
+      const g = parseInt(c.substr(2,2),16);
+      const b = parseInt(c.substr(4,2),16);
+      const luminance = (0.299*r + 0.587*g + 0.114*b) / 255;
+      return luminance > 0.6 ? "#000" : "#fff";
+    } catch (e) {
+      return "#fff";
+    }
+  }
+
+  // Open/Close popup
+  if (addCategoryButton) {
+    addCategoryButton.addEventListener("click", () => {
+      addCategoryOverlay.style.display = "block";
+    });
+  }
+
+  if (closePopup) {
+    closePopup.addEventListener("click", () => {
+      addCategoryOverlay.style.display = "none";
+    });
+  }
+
+  // Save category
+  if (saveCategoryButton) {
+    saveCategoryButton.addEventListener("click", async () => {
+        const categoryName = categoryNameInput.value.trim();
+        const categoryColor = categoryColorInput.value || "#cccccc";
+        const categoryPrivacy = document.querySelector('input[name="catPrivacy"]:checked')?.id;
+        if (!categoryName) return;
+
+        const categoryFormat = {
+          Name: categoryName,
+          Color: categoryColor,
+          Privacy: categoryPrivacy //Change to what the user selects in the future
+        };
+        const username = window.sessionStorage.getItem("username");
+        const accessToken = window.sessionStorage.getItem("accessToken");
+
+        try {
+          console.log("Calling createCategory", username, categoryFormat);
+          let result = await window.electronAPI.createCategory(username, categoryFormat, accessToken);
+          console.log("createCategory result:", result);
+        } catch (err) {
+          console.error("createCategory failed:", err);
+          alert("Could not save category to server");
+          return;
+        }
+
+        const newCategoryDiv = document.createElement("div");
+        newCategoryDiv.style.padding = "4px";
+
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.id = categoryName;
+        checkbox.value = categoryName;
+        checkbox.checked = true;
+
+        const label = document.createElement("label");
+        label.htmlFor = categoryName;
+        label.textContent = categoryName;
+
+        newCategoryDiv.appendChild(checkbox);
+        newCategoryDiv.appendChild(label);
+        filterMenu.appendChild(newCategoryDiv);
+
+        setupFilterCheckbox(checkbox, categoryName);
+
+        const box = document.createElement("div");
+        box.className = "category-box";
+        box.classList.add(categoryName);
+        box.textContent = categoryName;
+        box.style.backgroundColor = categoryColor;
+        box.style.color = getContrastColor(categoryColor);
+        box.style.margin = "6px";
+        box.style.borderRadius = "6px";
+        box.style.display = "inline-block";
+        box.style.minWidth = "40px";
+
+        box.dataset.categoryName = categoryName;
+        box.dataset.categoryColor = categoryColor;
+
+        categoryDisplay.appendChild(box);
+
+        categoryNameInput.value = "";
+        categoryColorInput.value = "#ff0000";
+        addCategoryOverlay.style.display = "none";
+      });
+    }
+}
 
 // DOMContentLoaded wrapper to initialize everything
 function LoadUserData() {
@@ -103,6 +302,8 @@ function LoadUserData() {
 
 document.addEventListener("DOMContentLoaded", (event) =>{
   setupSignInPopup();
+  setupAddCategoryPopup();
+  setupAllFilterCheckboxes();
 })
 
 
