@@ -38,13 +38,24 @@
       <!-- End of Filter Nav Menu -->
       <!-- Sign in Pop -->
       <div class = "signInPopUpOverlay">
+      <button id="request-friend demo2">send request</button> <button id="accept-friend demo2">accept request</button> <button id="deny-friend demo2">deny request</button>
+      <!-- End of Filter Nav Button stuff -->
+    </div>
+    <!-- Sign in overlay -->
+    <div class = "signInPopUpOverlay">
         <div class = "signInPopUp">
           <span class="closeSignInPopUp">&times;</span>
           <div class = "signInPopUpContent">
             <p>Sign In</p>
+            <input type="text" placeholder="Email" id = "emailInput"/>
             <input type="text" placeholder="Username" id = "userNameInput"/>
             <input type="password" placeholder="Password" id = "passwordInput"/>
-            <input type="submit" id = "signInSubmit">
+            <input type="submit" id = "signInSubmit" value = "Log In">
+          </div>
+          <div class="text-center">
+            <button id="Register-Account">
+              Register Account
+            </button>
           </div>
         </div>
       </div>

@@ -349,4 +349,8 @@ input[type="radio"], input[type="checkbox"]{
     border: #2e2e2e, solid;
     border-radius: 4px;
     font-size: small;
+/* End Catergory Filter CSS*/
+
+#emailInput{
+    display: none;
 }

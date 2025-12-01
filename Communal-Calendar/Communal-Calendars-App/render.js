@@ -151,6 +151,8 @@ function setupSignInPopup() {
   const signInSubmit = document.querySelector("#signInSubmit");
   const userNameInput = document.querySelector("#userNameInput");
   const passwordInput = document.querySelector("#passwordInput");
+  const registerAccount = document.getElementById("Register-Account");
+  const emailInput = document.getElementById("emailInput");
 
   if (signInButton) {
     signInButton.addEventListener("click", () => {
@@ -165,18 +167,49 @@ function setupSignInPopup() {
   }
 
   if (signInSubmit) {
+      console.log("AHASHDAIUSDVIAUFIVSADFASFKASUBFIUASDIFBSDAVFUVSADFYVUSADBFUVSADIFBASUBFIASF")
     signInSubmit.addEventListener("click", () => {
-      const username = userNameInput.value;
-      const password = passwordInput.value;
-      if (username && password) {
-        signInOverlay.style.display = "none";
-        userNameInput.value = "";
-        passwordInput.value = "";
-        loginUser(username, password);
-      } else {
-        alert("Please enter a username and password.");
+      console.log("AHASHDAIUSDVIAUFIVSADFASFKASUBFIUASDIFBSDAVFUVSADFYVUSADBFUVSADIFBASUBFIASF")
+      if(signInSubmit.value == "Log In"){
+        const username = userNameInput.value;
+        const password = passwordInput.value;
+        if (username && password) {
+          signInOverlay.style.display = "none";
+          userNameInput.value = "";
+          passwordInput.value = "";
+          loginUser(username, password);
+        } else {
+          alert("Please enter a username and password.");
+        }
+      }else{
+        const username = userNameInput.value;
+        const password = passwordInput.value;
+        const email = emailInput.value;
+        if (username && password && email) {
+          signInOverlay.style.display = "none";
+          userNameInput.value = "";
+          passwordInput.value = "";
+          emailInput.value = "";
+          registerUser(email, username, password);
+        } else {
+          alert("Please enter an email, username, and password.");
+        }
       }
     });
+  }
+
+  if (registerAccount) {
+    registerAccount.addEventListener("click", () => {
+      console.log("AHASHDAIUSDVIAUFIVSADFASFKASUBFIUASDIFBSDAVFUVSADFYVUSADBFUVSADIFBASUBFIASF")
+      if(signInSubmit.value == "Log In"){
+        emailInput.style.display = "block";
+        signInSubmit.value = "Register"
+      }else{
+        console.log("WUWASOIB")
+        emailInput.style.display = "none";
+        signInSubmit.value = "Log In"
+      }
+    })
   }
 }
 // Add Category popup logic
@@ -293,10 +326,26 @@ function LoadUserData() {
   getEvents(username);
 
   const form = document.getElementById("get-calendar-data");
+  const request = document.getElementById("request-friend demo2");
+  const accept = document.getElementById("accept-friend demo2");
+  const deny = document.getElementById("deny-friend demo2");
+
+  console.log("test 1/4")
   if (form) {
     form.addEventListener("submit", formSubmit);
   }
-
+  if(request){
+  console.log("test 2/4")
+    request.addEventListener("click", requestFriend);
+  }
+  if(accept){
+  console.log("test 3/4")
+    accept.addEventListener("click", acceptFriend)
+  }
+  if(deny){
+  console.log("test 4/4")
+    deny.addEventListener("click", denyFriend)
+  }
 };
 
 
@@ -305,7 +354,6 @@ document.addEventListener("DOMContentLoaded", (event) =>{
   setupAddCategoryPopup();
   setupAllFilterCheckboxes();
 })
-
 
 
 async function loginUser(username, password) {
@@ -324,6 +372,25 @@ async function loginUser(username, password) {
     return { accessToken, refreshToken };
   } catch (err) {
     console.error("Login failed:", err);
+  }
+}
+
+async function registerUser(email, username, password){
+  try {
+    const { accessToken, refreshToken } = await window.electronAPI.registerUser(email, username, password);
+    console.log("Registration successful");
+    console.log("Access Token:", accessToken);
+    console.log("Refresh Token:", refreshToken);
+
+    // Store tokens in memory or localStorage if needed
+    window.sessionStorage.setItem("username", username);
+    window.sessionStorage.setItem("accessToken", accessToken);
+    window.sessionStorage.setItem("refreshToken", refreshToken);
+
+    LoadUserData();
+    return { accessToken, refreshToken };
+  } catch (err) {
+    console.error("Registration failed:", err);
   }
 }
 
@@ -357,5 +424,51 @@ async function getCategories(username) {
     return categories;
   } catch (err) {
     console.error("Failed to retrieve categories:", err);
+  }
+}
+
+async function requestFriend(e) {
+  try{
+    const accessToken = window.sessionStorage.getItem("accessToken");
+    const event = e.currentTarget;
+    const requestee = event.id.split(" ").pop();
+    const requester = sessionStorage.getItem("username");
+    const friendRequest = await window.electronAPI.requestFriend(requester, requestee, accessToken);
+    alert(friendRequest);
+    return(friendRequest);
+  } catch (err) {
+    console.error("Failed send friend Request:", err);
+  }
+}
+
+async function acceptFriend(e) {
+  try{
+    const accessToken = window.sessionStorage.getItem("accessToken");
+    const event = e.currentTarget;
+    const requester = event.id.split(" ").pop();
+    const requestee = sessionStorage.getItem("username");
+    const requesterTEMP = requestee;
+    const requesteeTEMP = requester;
+    const friend = await window.electronAPI.acceptFriend(requesterTEMP, requesteeTEMP, accessToken); //THIS IS BACKWARDS FOR TESTING MUST BE SWITCHED WITH NEW CODE!!!!
+    alert(friend);
+    return(friend);
+  } catch(err){
+    console.log(err);
+  }
+}
+
+async function denyFriend(e) {
+  try{
+    const accessToken = window.sessionStorage.getItem("accessToken");
+    const event = e.currentTarget;
+    const requester = event.id.split(" ").pop();
+    const requestee = sessionStorage.getItem("username");
+    const requesterTEMP = requestee;
+    const requesteeTEMP = requester;
+    const friend = await window.electronAPI.denyFriend(requesterTEMP, requesteeTEMP, accessToken); //THIS IS BACKWARDS FOR TESTING MUST BE SWITCHED WITH NEW CODE!!!!
+    alert(friend);
+    return(friend);
+  } catch(err){
+    console.log(err);
   }
 }
