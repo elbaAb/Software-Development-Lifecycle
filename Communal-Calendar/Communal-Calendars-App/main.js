@@ -33,14 +33,6 @@ app.on("window-all-closed", () => {
 
 
 
-
-
-
-
-
-
-
-
 //below are the functions used to retrieve data from the server.
 
 ipcMain.handle("login-user", async (event, { username, password }) => {
@@ -105,6 +97,22 @@ ipcMain.handle("retrieve-categories", async (event, { username, accessToken }) =
   }
 });
 
+ipcMain.handle("create-category", async (event, { username, category, accessToken }) => {
+  console.log("Made it to main");
+  try {
+    const response = await axios.post(`http://localhost:3000/calendar/categories/${username}`, category,{
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`
+        }
+      }
+    );
+    return response.data;
+  } catch (err) {
+    console.error("Create category failed:", err.message);
+    throw err;
+  }
+});
 ipcMain.handle("register-user", async (event, { email, username, password }) => {
   try {
     const response = await axios.post("http://localhost:3000/users/register", {

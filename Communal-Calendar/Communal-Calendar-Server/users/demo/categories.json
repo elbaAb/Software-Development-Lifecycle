@@ -1,7 +1,12 @@
 [
-    {
-        "Name": "Work",
-        "Color": "#134267",
-        "Privacy": "public"
-    }
+  {
+    "Name": "Work",
+    "Color": "#134267",
+    "Privacy": "public"
+  },
+  {
+    "Name": "test2",
+    "Color": "#a28181",
+    "Privacy": "favorites"
+  }
 ]

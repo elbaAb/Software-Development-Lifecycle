@@ -66,9 +66,25 @@ function addEvent(username, newEvent) {
   return newEvent;
 }
 
+function saveCategories(username, categories) {
+  console.log("Made it to saveCategories");
+  const filePath = getCategoriesFilePath(username);
+  fs.writeFileSync(filePath, JSON.stringify(categories, null, 2), "utf8");
+}
+
+function addCategory(username, newCategory) {
+  console.log("Made it to addCategories");
+  const categories = loadCategories(username);
+  categories.push(newCategory);
+  saveCategories(username, categories);
+  return newCategory;
+}
+
 module.exports = {
   loadEvents,
   saveEvents,
   addEvent,
-  loadCategories
+  loadCategories,
+  saveCategories,
+  addCategory,
 };

@@ -1,7 +1,7 @@
 // routes/events.js
 const express = require("express");
 const router = express.Router();
-const { loadEvents, addEvent, loadCategories } = require("../controllers/calendar");
+const { loadEvents, addEvent, loadCategories, addCategory } = require("../controllers/calendar");
 
 // GET all events for a user
 router.get("/events/:username", (req, res) => {
@@ -40,6 +40,19 @@ router.get("/categories/:username", (req, res) => {
     res.json(retrievedCategories);
   } catch (err) {
     res.status(500).json({ error: "Failed to load categories" });
+  }
+});
+
+router.post("/categories/:username", (req, res) => {
+  console.log("Reached router");
+  const { username } = req.params;
+  const category = req.body;
+
+  try {
+    const created = addCategory(username, category);
+    res.json(created);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to save category" });
   }
 });
 module.exports = router;
