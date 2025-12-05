@@ -484,3 +484,201 @@ async function denyFriend(e) {
     console.log(err);
   }
 }
+document.addEventListener("DOMContentLoaded", async () => {
+    const grid = document.getElementById("calendarGrid");
+    const calendarBox = document.getElementById("calendarBox");
+
+    if (!grid || !calendarBox) {
+        console.error("calendarGrid or calendarBox not found!");
+        return;
+    }
+
+    buildCalendarGrid(grid);       // Build 7×24 grid
+    enableCellClick(grid);         // Attach popup click listeners after cells exist
+
+    const events = await fetchEvents();
+    drawCalendar(events);          // Draw existing events
+});
+
+async function fetchEvents() {
+    try {
+        const res = await fetch("/api/events");
+        if (!res.ok) throw new Error("Failed to fetch events");
+        return await res.json();
+    } catch (err) {
+        console.error(err);
+        return [];
+    }
+}
+
+function buildCalendarGrid(grid) {
+    grid.innerHTML = "";
+    grid.style.position = "relative";
+
+    for (let day = 0; day < 7; day++) {
+        for (let hour = 0; hour < 24; hour++) {
+            const cell = document.createElement("div");
+            cell.className = "hour-cell";
+            cell.dataset.day = day;
+            cell.dataset.hour = hour;
+            grid.appendChild(cell);
+        }
+    }
+}
+
+function enableCellClick(grid) {
+    const popup = document.getElementById("eventPopup");
+    const popupInput = document.getElementById("popupEventName");
+    const saveBtn = document.getElementById("popupSaveBtn");
+    const cancelBtn = document.getElementById("popupCancelBtn");
+
+    let currentCell = null;
+
+    grid.querySelectorAll(".hour-cell").forEach(cell => {
+        cell.style.cursor = "pointer";
+        cell.addEventListener("click", (e) => {
+            e.stopPropagation();
+            currentCell = cell;
+
+            const rect = cell.getBoundingClientRect();
+            popup.style.top = `${rect.bottom + window.scrollY}px`;
+            popup.style.left = `${rect.left + window.scrollX}px`;
+            popupInput.value = "";
+            popup.style.display = "block";
+            popupInput.focus();
+        });
+    });
+
+    saveBtn.addEventListener("click", async () => {
+        const eventName = popupInput.value.trim();
+        if (!eventName || !currentCell) {
+            popup.style.display = "none";
+            return;
+        }
+
+        const now = new Date();
+        const dayOffset = Number(currentCell.dataset.day);
+        const hour = Number(currentCell.dataset.hour);
+
+        const start = new Date(now);
+        start.setDate(start.getDate() - start.getDay() + dayOffset);
+        start.setHours(hour, 0, 0, 0);
+
+        const end = new Date(start);
+        end.setHours(end.getHours() + 1);
+
+        const newEvent = {
+            eventName,
+            startDate: start.toISOString().split('T')[0],
+            endDate: end.toISOString().split('T')[0],
+            startTime: start.toTimeString().slice(0,5),
+            endTime: end.toTimeString().slice(0,5),
+            privacy: "public",
+            repeat: "none",
+            friends: [],
+            eventDates: [{ start: start.toLocaleString(), end: end.toLocaleString() }]
+        };
+
+        try {
+            await createEvent(sessionStorage.getItem("username"), newEvent);
+            const updatedEvents = await fetchEvents();
+            drawCalendar(updatedEvents);
+        } catch (err) {
+            console.error(err);
+            alert("Failed to save event.");
+        } finally {
+            popup.style.display = "none";
+        }
+    });
+
+    cancelBtn.addEventListener("click", () => {
+        popup.style.display = "none";
+    });
+
+    document.addEventListener("click", (e) => {
+        if (!popup.contains(e.target) && e.target !== currentCell) {
+            popup.style.display = "none";
+        }
+    });
+}
+
+function drawCalendar(events) {
+    const grid = document.getElementById("calendarGrid");
+    const calendarBox = document.getElementById("calendarBox");
+    if (!grid || !calendarBox) return;
+
+    calendarBox.innerHTML = "";
+
+    const gridRect = grid.getBoundingClientRect();
+    const cellWidth = gridRect.width / 7;
+    const cellHeight = gridRect.height / 24;
+
+    events.forEach(event => {
+        event.eventDates.forEach(date => {
+            const start = new Date(date.start);
+            const end = new Date(date.end);
+
+            const day = start.getDay();
+            const startHour = start.getHours() + start.getMinutes() / 60;
+            const endHour = end.getHours() + end.getMinutes() / 60;
+            const duration = endHour - startHour;
+
+            const block = document.createElement("div");
+            block.className = "event-block";
+            block.textContent = event.eventName;
+            block.style.position = "absolute";
+            block.style.top = `${startHour * cellHeight}px`;
+            block.style.left = `${day * cellWidth}px`;
+            block.style.width = `${cellWidth - 2}px`;
+            block.style.height = `${duration * cellHeight}px`;
+            block.style.backgroundColor = "#6fc3ff";
+            block.style.border = "1px solid #333";
+            block.style.boxSizing = "border-box";
+            block.style.padding = "2px";
+            block.style.overflow = "hidden";
+            block.style.cursor = "pointer";
+
+            block.dataset.id = event.id;
+
+            block.addEventListener("click", async (e) => {
+                e.stopPropagation();
+                const newName = prompt("Edit event name:", event.eventName);
+                if (newName === null) return;
+
+                const updatedEvent = { ...event, eventName: newName };
+                try {
+                    const res = await fetch(`/api/events/${event.id}`, {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(updatedEvent)
+                    });
+                    if (!res.ok) throw new Error("Failed to update event");
+
+                    const updatedEvents = await fetchEvents();
+                    drawCalendar(updatedEvents);
+                } catch (err) {
+                    console.error(err);
+                    alert("Failed to update event.");
+                }
+            });
+
+            block.addEventListener("contextmenu", async (e) => {
+                e.preventDefault();
+                if (!confirm("Delete this event?")) return;
+
+                try {
+                    const res = await fetch(`/api/events/${event.id}`, { method: "DELETE" });
+                    if (!res.ok) throw new Error("Failed to delete event");
+
+                    const updatedEvents = await fetchEvents();
+                    drawCalendar(updatedEvents);
+                } catch (err) {
+                    console.error(err);
+                    alert("Failed to delete event.");
+                }
+            });
+
+            calendarBox.appendChild(block);
+        });
+    });
+}
