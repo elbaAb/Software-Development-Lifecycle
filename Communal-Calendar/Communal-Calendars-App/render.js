@@ -355,6 +355,18 @@ document.addEventListener("DOMContentLoaded", (event) =>{
   setupAllFilterCheckboxes();
 })
 
+// Toggle "Next Event Today"
+document.addEventListener("DOMContentLoaded", () => {
+    const toggleButton = document.getElementById("toggle-today-btn");
+    const todaySection = document.querySelector(".right-section");
+
+    if (toggleButton && todaySection) {
+        toggleButton.addEventListener("click", () => {
+            todaySection.style.display =
+                todaySection.style.display === "none" ? "flex" : "none";
+        });
+    }
+});
 
 async function loginUser(username, password) {
   try {
