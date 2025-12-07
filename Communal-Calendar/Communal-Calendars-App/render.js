@@ -21,6 +21,8 @@ function formSubmit(event) {
     saturday: 6
   };
   const selectedDays = Array.from(document.querySelectorAll('input[name=Day]:checked')).map(day => dayMap[day.id]); //Similar to friends, maps the selected days to their numbers
+  const travelTimeRaw = document.getElementById("Travel-Time").value || 0;
+  const travelTime = parseInt(travelTimeRaw, 10) || 0;
 
   //Splits time strings into hours and minutes (11:30 -> startHour = 11 and startMinute = 30) and converts them to numbers
   const [startHour, startMinute] = startTime.split(':').map(Number);
@@ -43,10 +45,11 @@ function formSubmit(event) {
       //Creating the start and end dates then setting their hours and minutes (The 0 are for seconds and milliseconds)
       let startDateTime = new Date(currentDate);
       startDateTime.setHours(startHour, startMinute, 0, 0);
+      if (travelTime) startDateTime.setMinutes(startDateTime.getMinutes() - travelTime);
 
       let endDateTime = new Date(currentDate);
       endDateTime.setHours(endHour, endMinute, 0, 0);
-
+      if (travelTime) endDateTime.setMinutes(endDateTime.getMinutes() + travelTime);
       //This puts the date into the array created earlier in local time using toLocaleString()
       eventDates.push({ start: startDateTime.toLocaleString(), end: endDateTime.toLocaleString()});
     }
