@@ -5,29 +5,40 @@
     <link rel="stylesheet" href="base.css" />
     <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
     <meta
-      http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'"
-    />
-    <meta
-      http-equiv="X-Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'"
-    />
+  http-equiv="Content-Security-Policy"
+  content="default-src 'self'; script-src 'self'; img-src 'self' data:"
+/>
+<meta
+  http-equiv="X-Content-Security-Policy"
+  content="default-src 'self'; script-src 'self'; img-src 'self' data:"
+/>
+  
+  
     <title>Communal Calendar</title>
   </head>
   <body>
-    <div class = "nav-bar">
+    <div class="nav-bar">
+      <!-- show Sign In Button when user is not logged in -->
       <div class="signInButton">
         <button>Sign In</button>
       </div>
-      <div class = "nav-button" id = "friends-button">
-          
-      </div>
-      <div class = "nav-button" id = "filter-button">
-          
-      </div>
-      <div class = "nav-button" id = "events-button">
-          
-      </div>
+      
+      <!-- User display shown when user is logged in -->
+<div id="user-display" class="user-display">
+  <div class="profile-container">
+    <img id="profile-picture" class="profile-picture" src="" alt="Profile">
+    <span id="username-display"></span>
+    <div class="profile-menu">
+      <button id="change-profile-pic">Change Picture</button>
+      <button id="sign-out-btn">Sign Out</button>
+    </div>
+  </div>
+</div>
+      
+      <div class="nav-button" id="friends-button"></div>
+      <div class="nav-button" id="filter-button"></div>
+      <div class="nav-button" id="events-button"></div>
+      
       <!-- Filter Nav Menu -->
       <div class="filterDropdown">
         <button>Filter</button>
@@ -35,58 +46,58 @@
           <button id="addCategoryBtn" class="add-category-btn">+</button>
         </div>
       </div>
-      <!-- End of Filter Nav Menu -->
-      <!-- Sign in Pop -->
-      <div class = "signInPopUpOverlay">
-      <button id="request-friend demo2">send request</button> <button id="accept-friend demo2">accept request</button> <button id="deny-friend demo2">deny request</button>
-      <!-- End of Filter Nav Button stuff -->
+      
+      <button id="request-friend demo2">Send request</button>
+      <button id="accept-friend demo2">Accept request</button>
+      <button id="deny-friend demo2">Deny request</button>
     </div>
+
     <!-- Sign in overlay -->
-    <div class = "signInPopUpOverlay">
-        <div class = "signInPopUp">
-          <span class="closeSignInPopUp">&times;</span>
-          <div class = "signInPopUpContent">
-            <p>Sign In</p>
-            <input type="text" placeholder="Email" id = "emailInput"/>
-            <input type="text" placeholder="Username" id = "userNameInput"/>
-            <input type="password" placeholder="Password" id = "passwordInput"/>
-            <input type="submit" id = "signInSubmit" value = "Log In">
-          </div>
-          <div class="text-center">
-            <button id="Register-Account">
-              Register Account
-            </button>
-          </div>
+    <div class="signInPopUpOverlay">
+      <div class="signInPopUp">
+        <span class="closeSignInPopUp">&times;</span>
+        <div class="signInPopUpContent">
+          <p>Sign In</p>
+          <input type="text" placeholder="Email" id="emailInput" />
+          <input type="text" placeholder="Username" id="userNameInput" />
+          <input type="password" placeholder="Password" id="passwordInput" />
+          <input type="submit" id="signInSubmit" value="Log In">
+        </div>
+        <div class="text-center">
+          <button id="Register-Account">Register Account</button>
         </div>
       </div>
-      <!-- End of Sign in -->
-      <!-- Add Category Pop Up -->
-      <div class="addCategoryPopupOverlay">
-        <div class="addCategoryPopUp">
-        <span class="closeAddCategoryPopUp">&times;</span>
-          <div class="addCategoryPopUpContent">
-            <p>Add Category</p>
-            <input type="text" id="newCategoryInput" placeholder="Name">
-            <input type="color" id="newCategoryColor" value="#ff0000">
-            <div><input type="radio" name="catPrivacy" id="friends" checked> <label for="Cat-Friends">Friends</label></div>
-            <div><input type="radio" name="catPrivacy" id="favorites" checked> <label for="Cat-Favorites">Favorites</label></div>
-            <div><input type="radio" name="catPrivacy" id="private" checked> <label for="Cat-Private">Private</label></div>
-            <button id="saveCategoryBtn">Add</button>
-          </div>
-        </div>
-      </div>
-    <!-- End of Add Category Pop Up -->
     </div>
+    <!-- End of Sign in -->
+
+    <!-- Add Category Pop Up -->
+    <div class="addCategoryPopupOverlay">
+      <div class="addCategoryPopUp">
+        <span class="closeAddCategoryPopUp">&times;</span>
+        <div class="addCategoryPopUpContent">
+          <p>Add Category</p>
+          <input type="text" id="newCategoryInput" placeholder="Name">
+          <input type="color" id="newCategoryColor" value="#ff0000">
+          <div><input type="radio" name="catPrivacy" id="friends" checked> <label for="Cat-Friends">Friends</label></div>
+          <div><input type="radio" name="catPrivacy" id="favorites" checked> <label for="Cat-Favorites">Favorites</label></div>
+          <div><input type="radio" name="catPrivacy" id="private" checked> <label for="Cat-Private">Private</label></div>
+          <button id="saveCategoryBtn">Add</button>
+        </div>
+      </div>
+    </div>
+    <!-- End of Add Category Pop Up -->
+
     <div class="main">
       <div class="calendar-container">
         <div class="calendar">
-          <div class = "category-display" id = "category-display">
+          <div class="category-display" id="category-display">
             <!-- Categories will be dynamically added here -->
           </div>
           <div class="School testBox">1</div>
           <div class="Work testBox">1</div>
           <div class="Family testBox">1</div>
         </div>
+        
         <search class="bottom-section">
           <form class="search-container" id="get-calendar-data">
             <div class="search-section">
@@ -109,30 +120,33 @@
                 <label for="End-Date">Final Repeat: </label> <input name="End-Date" id="End-Date" type="date">
               </div>
             </div>
+            
             <div class="search-section">
               <div class="search-item">
                 <label>Privacy:</label>
               </div>
 
               <div class="search-item">
-                  <input type="radio" name="Privacy" id="Privacy-Public" checked> <label for="Privacy-Friends">Friends</label>
+                <input type="radio" name="Privacy" id="Privacy-Public" checked> <label for="Privacy-Friends">Friends</label>
               </div>
 
               <div class="search-item">
-                  <input type="radio" name="Privacy" id="Privacy-Favorite"> <label for="Privacy-Favorite">Favorites Only</label>
+                <input type="radio" name="Privacy" id="Privacy-Favorite"> <label for="Privacy-Favorite">Favorites Only</label>
               </div>
 
               <div class="search-item">
-                  <input type="radio" name="Privacy" id="Privacy-Private"> <label for="Privacy-Private">Private</label>
+                <input type="radio" name="Privacy" id="Privacy-Private"> <label for="Privacy-Private">Private</label>
               </div>
+              
               <div class="search-item">
                 <label for="Repeat">Repeat Frequency</label>
               </div>
+              
               <div class="search-item">
                 <select name="Repeat" id="Repeat">
                   <option value="One-Time">One-Time</option>
                   <option value="Daily">Daily</option>
-                <option value="Weekly">Weekly</option>
+                  <option value="Weekly">Weekly</option>
                   <option value="Biweekly">Biweekly</option>
                   <option value="Monthly">Monthly</option>
                   <option value="Bimonthly">Bimonthly</option>
@@ -141,33 +155,35 @@
                 </select>
               </div>
             </div>
+            
             <div class="search-item">
-                <div class="days-section">
-                  <div class ="search-section">
-                    <div class="search-section">
-                      <input type="checkbox" name="Day" id="sunday"><label for="sunday">Sunday</label>
-                    </div>
-                    <div class="search-section">
-                      <input type="checkbox" name="Day" id="monday"><label for="monday">Monday</label>
-                    </div>
-                    <div class="search-section">
-                      <input type="checkbox" name="Day" id="tuesday"><label for="tuesday">Tuesday</label>
-                    </div>
-                    <div class="search-section">
-                      <input type="checkbox" name="Day" id="wednesday"><label for="wednesday">Wednesday</label>
-                    </div>
-                    <div class="search-section">
-                      <input type="checkbox" name="Day" id="thursday"><label for="thursday">Thursday</label>
-                    </div>
-                    <div class="search-section">
-                      <input type="checkbox" name="Day" id="friday"><label for="friday">Friday</label>
-                    </div>
-                    <div class="search-section">
-                      <input type="checkbox" name="Day" id="saturday"><label for="saturday">Saturday</label>
-                    </div>
+              <div class="days-section">
+                <div class="search-section">
+                  <div class="search-section">
+                    <input type="checkbox" name="Day" id="sunday"><label for="sunday">Sunday</label>
+                  </div>
+                  <div class="search-section">
+                    <input type="checkbox" name="Day" id="monday"><label for="monday">Monday</label>
+                  </div>
+                  <div class="search-section">
+                    <input type="checkbox" name="Day" id="tuesday"><label for="tuesday">Tuesday</label>
+                  </div>
+                  <div class="search-section">
+                    <input type="checkbox" name="Day" id="wednesday"><label for="wednesday">Wednesday</label>
+                  </div>
+                  <div class="search-section">
+                    <input type="checkbox" name="Day" id="thursday"><label for="thursday">Thursday</label>
+                  </div>
+                  <div class="search-section">
+                    <input type="checkbox" name="Day" id="friday"><label for="friday">Friday</label>
+                  </div>
+                  <div class="search-section">
+                    <input type="checkbox" name="Day" id="saturday"><label for="saturday">Saturday</label>
                   </div>
                 </div>
               </div>
+            </div>
+            
             <div class="search-section">
               <div class="search-item">
                 <input type="text" name="Search-Friends" id="Search-Friends" placeholder="Include friends">
@@ -182,7 +198,7 @@
                     <input type="checkbox" name="Friend" id="friend2"><label for="friend2">Friend 2</label>
                   </div>
                   <div class="search-section">
-                  <input type="checkbox" name="Friend" id="friend3"><label for="friend3">Friend 3</label>
+                    <input type="checkbox" name="Friend" id="friend3"><label for="friend3">Friend 3</label>
                   </div>
                   <div class="search-section">
                     <input type="checkbox" name="Friend" id="friend4"><label for="friend4">Friend 4</label>
@@ -202,15 +218,16 @@
                 </div>
               </div>
             </div>
+            
             <div class="search-section">
               <input class="text-center" type="submit" value="submit">
             </div>
           </form>
         </search>
       </div>
+      
       <div class="right-section text-center">
         <div class="box" id="box3">
-        <!-- Box A: Next Event Today -->
           <div class="box" id="today-box">
             <h3>Next Event Today</h3>
             <input
@@ -223,8 +240,8 @@
           </div>
         </div>
       </div>
-
     </div>
+    
     <script type="module" src="render.js"></script>
   </body> 
 </html>
