@@ -1,4 +1,4 @@
-function formSubmit(event) {
+async function formSubmit(event) {
   event.preventDefault();
 
   const eventName = document.getElementById("Event").value;
@@ -8,7 +8,7 @@ function formSubmit(event) {
   const endDate = document.getElementById("End-Date").value || startDate;
   const privacy = document.querySelector("input[name=Privacy]:checked")?.id;
   const repeat = document.getElementById("Repeat").value;
-  const friends = Array.from(document.querySelectorAll("input[name=Friend]:checked")).map(f => f.id) || false;
+  const friends = Array.from(document.querySelectorAll("input[friend]:checked")).map(f => f.getAttribute("friend")) || false;
 
   //Assigning corresponding days to numbers
   const dayMap = {
@@ -58,8 +58,9 @@ function formSubmit(event) {
 
   const NewEvent = { eventName, startDate, startTime, endTime, endDate, privacy, repeat, friends, eventDates};
 
+  console.log(NewEvent)
   
-  createEvent(sessionStorage.getItem("username"), NewEvent);
+  await createEvent(sessionStorage.getItem("username"), NewEvent);
 }
 
 function setupFilterCheckbox(checkbox, categoryName) {
@@ -153,6 +154,7 @@ function setupSignInPopup() {
   const closePopup = document.querySelector(".closeSignInPopUp");
   const signInSubmit = document.querySelector("#signInSubmit");
   const userNameInput = document.querySelector("#userNameInput");
+  userNameInput.style.zIndex = "99999";
   const passwordInput = document.querySelector("#passwordInput");
   const registerAccount = document.getElementById("Register-Account");
   const emailInput = document.getElementById("emailInput");
@@ -170,9 +172,7 @@ function setupSignInPopup() {
   }
 
   if (signInSubmit) {
-      console.log("AHASHDAIUSDVIAUFIVSADFASFKASUBFIUASDIFBSDAVFUVSADFYVUSADBFUVSADIFBASUBFIASF")
     signInSubmit.addEventListener("click", () => {
-      console.log("AHASHDAIUSDVIAUFIVSADFASFKASUBFIUASDIFBSDAVFUVSADFYVUSADBFUVSADIFBASUBFIASF")
       if(signInSubmit.value == "Log In"){
         const username = userNameInput.value;
         const password = passwordInput.value;
@@ -182,7 +182,6 @@ function setupSignInPopup() {
           passwordInput.value = "";
           loginUser(username, password);
         } else {
-          alert("Please enter a username and password.");
         }
       }else{
         const username = userNameInput.value;
@@ -195,7 +194,6 @@ function setupSignInPopup() {
           emailInput.value = "";
           registerUser(email, username, password);
         } else {
-          alert("Please enter an email, username, and password.");
         }
       }
     });
@@ -203,12 +201,10 @@ function setupSignInPopup() {
 
   if (registerAccount) {
     registerAccount.addEventListener("click", () => {
-      console.log("AHASHDAIUSDVIAUFIVSADFASFKASUBFIUASDIFBSDAVFUVSADFYVUSADBFUVSADIFBASUBFIASF")
       if(signInSubmit.value == "Log In"){
         emailInput.style.display = "block";
         signInSubmit.value = "Register"
       }else{
-        console.log("WUWASOIB")
         emailInput.style.display = "none";
         signInSubmit.value = "Log In"
       }
@@ -323,53 +319,18 @@ function setupAddCategoryPopup() {
 }
 
 // DOMContentLoaded wrapper to initialize everything
-function LoadUserData() {
+async function LoadUserData() {
+  const accessToken = window.sessionStorage.getItem("accessToken");
   const username = window.sessionStorage.getItem("username");
-  getCategories(username);
-  getEvents(username);
-
-  const form = document.getElementById("get-calendar-data");
-  const request = document.getElementById("request-friend demo2");
-  const accept = document.getElementById("accept-friend demo2");
-  const deny = document.getElementById("deny-friend demo2");
-
-  console.log("test 1/4")
-  if (form) {
-    form.addEventListener("submit", formSubmit);
-  }
-  if(request){
-  console.log("test 2/4")
-    request.addEventListener("click", requestFriend);
-  }
-  if(accept){
-  console.log("test 3/4")
-    accept.addEventListener("click", acceptFriend)
-  }
-  if(deny){
-  console.log("test 4/4")
-    deny.addEventListener("click", denyFriend)
-  }
+  console.log("YIPEE")
+  await getCategories(username, accessToken);
+  console.log("YIPEE1")
+  await getEvents(username, accessToken);
+  console.log("YIPEE2")
+  await getFriends(username, accessToken);
+  console.log("YIPEE3")
 };
 
-
-document.addEventListener("DOMContentLoaded", (event) =>{
-  setupSignInPopup();
-  setupAddCategoryPopup();
-  setupAllFilterCheckboxes();
-})
-
-// Toggle "Next Event Today"
-document.addEventListener("DOMContentLoaded", () => {
-    const toggleButton = document.getElementById("toggle-today-btn");
-    const todaySection = document.querySelector(".right-section");
-
-    if (toggleButton && todaySection) {
-        toggleButton.addEventListener("click", () => {
-            todaySection.style.display =
-                todaySection.style.display === "none" ? "flex" : "none";
-        });
-    }
-});
 
 async function loginUser(username, password) {
   try {
@@ -420,9 +381,24 @@ async function createEvent(username, eventData) {
   }
 }
 
-async function getEvents(username) {
+function setupFriendsDropdown(e) {
+  let friends_button = document.getElementById("friends-dropdown-button");
+  let content = document.getElementById("friends-dropdown-content");
+
+  friends_button.addEventListener("click", () => {
+
+    if(content.style.display == "none"){
+      content.style.display = "block";
+    }else {
+      content.style.display = "none";
+    }
+  })
+
+
+}
+
+async function getEvents(username, accessToken) {
   try {
-    const accessToken = window.sessionStorage.getItem("accessToken");
     const events = await window.electronAPI.getEvents(username, accessToken);
     console.log("Events:", events);
     return events;
@@ -431,9 +407,33 @@ async function getEvents(username) {
   }
 }
 
-async function getCategories(username) {
+async function getRSVP(username, accessToken){
+  try{
+    const rsvp = await window.electronAPI.getRSVP(username, accesstoken);
+
+    for( let item of rsvp ){
+      container = document.createElement("div");
+      title = document.createElement("h2");
+      date = document.createElement("h3");
+      time = document.createElement("h3");
+      days = document.createElement("p")
+
+      title.textContent = item.eventName;
+      date.textContent = `${item.startDate} - ${item.endDate}`
+      time.textContent = `${item.startTime} - ${item.endTime}`
+
+      for( let day of item.event){
+
+      }
+    }
+  }
+  catch(err){
+
+  }
+}
+
+async function getCategories(username, accessToken) {
   try {
-    const accessToken = window.sessionStorage.getItem("accessToken");
     const categories = await window.electronAPI.getCategories(username, accessToken);
     console.log("Categories:", categories);
     return categories;
@@ -442,14 +442,136 @@ async function getCategories(username) {
   }
 }
 
+async function getFriends(username, accessToken) {
+  try {
+    const friends = await window.electronAPI.getFriends(username, accessToken);
+    console.log("Friends:", friends);
+
+    let content = document.getElementById("friends-dropdown-content");
+    let rsvpFriends = document.getElementById("search-friends-section");
+
+    content.innerHTML = "";     // clear these so if you relogin it doesn't refill them
+    rsvpFriends.innerHTML = "";
+
+    const requests = await getRequests(username, accessToken);
+
+    console.log(requests);
+
+    for( let request of requests ){
+      console.log("Friend request ", request);
+
+      let container = document.createElement("div");
+      container.setAttribute("request", request.from);
+      let name = document.createElement("div");
+      name.textContent = request.from;
+      let accept = document.createElement("button");
+      accept.textContent = "Accept";
+      accept.setAttribute("friend", request.from);
+      accept.addEventListener("click", acceptFriend);
+      let decline = document.createElement("button");
+      decline.textContent = "Decline";
+      decline.setAttribute("friend", request.from);
+      decline.addEventListener("click", denyFriend);
+
+      container.appendChild(name)
+      container.appendChild(accept);
+      container.appendChild(decline);
+
+      content.appendChild(container);
+    }
+
+    if (content) {
+      for (let i = 0; i < friends.length; i++) {
+        // Base container with name + checkbox
+        let container = document.createElement("div");
+        container.className = "Friends-Drop-Container";
+        container.setAttribute("friendParent",  friends[i].username)
+
+        let name = document.createElement("label");
+
+        let check = document.createElement("input");
+        check.type = "checkbox";
+        check.checked = false;
+        check.setAttribute("friend", friends[i].username);
+        name.appendChild(check);
+
+        name.appendChild(document.createTextNode(friends[i].username));
+        container.appendChild(name);
+
+        if (friends[i].favorite) {
+          container.className = "Friends-Drop-Container favoriteFriend";
+        }
+
+        // Clone the base container for each section
+        let rsvpClone = container.cloneNode(true);
+        let contentClone = container.cloneNode(true);
+
+        // Add buttons ONLY to the content clone
+        let favorite = document.createElement("button");
+        favorite.setAttribute("friend", friends[i].username);
+        favorite.addEventListener("click", changeFavorite);
+        favorite.textContent = friends[i].favorite ? "Unfavorite" : "Favorite";
+
+        let remove = document.createElement("button");
+        remove.setAttribute("friend", friends[i].username);
+        remove.addEventListener("click", removeFriend);
+        remove.textContent = "Remove";
+
+        contentClone.appendChild(favorite);
+        contentClone.appendChild(remove);
+
+        // Append to each section
+        rsvpFriends.appendChild(rsvpClone);
+        content.appendChild(contentClone);
+
+        // Attach checkbox listener to both clones
+        let rsvpCheckbox = rsvpClone.querySelector("input[type=checkbox]");
+        if (rsvpCheckbox) {
+          rsvpCheckbox.addEventListener("change", toggleFriendEvents);
+        }
+        let contentCheckbox = contentClone.querySelector("input[type=checkbox]");
+        if (contentCheckbox) {
+          contentCheckbox.addEventListener("change", toggleFriendEvents);
+        }
+      }
+    }
+
+    // Add search section at the bottom of content
+    let searchSection = document.createElement("div");
+    searchSection.className = "Friends-Drop-Container";
+    let searchFriend = document.createElement("input");
+    searchFriend.id = "friend-request-search";
+    searchFriend.type = "text";
+    let friendSubmit = document.createElement("button");
+    friendSubmit.textContent = "Add Friend";
+    friendSubmit.addEventListener("click", requestFriend);
+    searchSection.appendChild(searchFriend);
+    searchSection.appendChild(friendSubmit);
+    content.appendChild(searchSection);
+
+  } catch (err) {
+    console.error("Failed to retrieve friends:", err);
+  }
+}
+
+function toggleFriendEvents(e){
+
+}
+
 async function requestFriend(e) {
   try{
+    const searchFriend = document.getElementById("friend-request-search")
     const accessToken = window.sessionStorage.getItem("accessToken");
-    const event = e.currentTarget;
-    const requestee = event.id.split(" ").pop();
+    const requestee = searchFriend.value;
     const requester = sessionStorage.getItem("username");
+    console.log(requester);
+    console.log(requestee);
+    
+    if(requestee == requester) {
+      return("you cannot friend yourself");
+    }
+
     const friendRequest = await window.electronAPI.requestFriend(requester, requestee, accessToken);
-    alert(friendRequest);
     return(friendRequest);
   } catch (err) {
     console.error("Failed send friend Request:", err);
@@ -460,12 +582,11 @@ async function acceptFriend(e) {
   try{
     const accessToken = window.sessionStorage.getItem("accessToken");
     const event = e.currentTarget;
-    const requester = event.id.split(" ").pop();
+    const requester = event.getAttribute("friend")
     const requestee = sessionStorage.getItem("username");
-    const requesterTEMP = requestee;
-    const requesteeTEMP = requester;
-    const friend = await window.electronAPI.acceptFriend(requesterTEMP, requesteeTEMP, accessToken); //THIS IS BACKWARDS FOR TESTING MUST BE SWITCHED WITH NEW CODE!!!!
-    alert(friend);
+    const friend = await window.electronAPI.acceptFriend(requester, requestee, accessToken); 
+
+    getFriends(requestee, accessToken);
     return(friend);
   } catch(err){
     console.log(err);
@@ -476,15 +597,56 @@ async function denyFriend(e) {
   try{
     const accessToken = window.sessionStorage.getItem("accessToken");
     const event = e.currentTarget;
-    const requester = event.id.split(" ").pop();
+    const requester = event.getAttribute("friend")
     const requestee = sessionStorage.getItem("username");
-    const requesterTEMP = requestee;
-    const requesteeTEMP = requester;
-    const friend = await window.electronAPI.denyFriend(requesterTEMP, requesteeTEMP, accessToken); //THIS IS BACKWARDS FOR TESTING MUST BE SWITCHED WITH NEW CODE!!!!
-    alert(friend);
+    getFriends(requestee, accessToken)
     return(friend);
   } catch(err){
     console.log(err);
+  }
+}
+
+async function changeFavorite(e){
+  console.log("WORKS");
+  try{
+    const accessToken = window.sessionStorage.getItem("accessToken");
+    const friend = e.currentTarget.getAttribute("friend");
+    const username = sessionStorage.getItem("username");
+    const result = await window.electronAPI.changeFavorite(username, friend, accessToken);
+    console.log(result)
+    if(result){
+      e.currentTarget.textContent = "Unfavorite"
+    }else{
+      e.currentTarget.textContent = "Favorite"
+    }
+    return(result);
+  }catch(err){
+    console.log("failed to change favorite: ", err)
+  }
+}
+
+async function removeFriend(e){
+try{
+    const accessToken = window.sessionStorage.getItem("accessToken");
+    const friend = e.currentTarget.getAttribute("friend");
+    const username = sessionStorage.getItem("username");
+    const result = await window.electronAPI.removeFriend(username, friend, accessToken);
+    getFriends(username, accessToken);
+    parent.remove();
+    console.log(result)
+    return(result);
+  }catch(err){
+    console.log("failed to remove friend: ", err)
+  }
+}
+
+async function getRequests(username, accessToken){
+try{
+    const result = await window.electronAPI.getRequests(username, accessToken);
+    console.log(result)
+    return(result);
+  }catch(err){
+    console.log("failed to remove friend: ", err)
   }
 }
 document.addEventListener("DOMContentLoaded", async () => {
@@ -685,3 +847,20 @@ function drawCalendar(events) {
         });
     });
 }
+
+document.addEventListener("DOMContentLoaded", (event) =>{
+  setupSignInPopup();
+  setupAddCategoryPopup();
+  setupAllFilterCheckboxes();
+  setupFriendsDropdown();
+  
+  const toggleButton = document.getElementById("toggle-today-btn");
+  const todaySection = document.querySelector(".right-section");
+
+  if (toggleButton && todaySection) {
+      toggleButton.addEventListener("click", () => {
+          todaySection.style.display =
+              todaySection.style.display === "none" ? "flex" : "none";
+      });
+  }
+})

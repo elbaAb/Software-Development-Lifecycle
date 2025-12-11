@@ -6,9 +6,7 @@ const { loadJson, saveJson, createUserFolder } = require("../utils/fileUtils");
 const { hashPassword, comparePassword } = require("../utils/cryptoUtils");
 const { isValidUsername, isValidPassword, isValidEmail } = require("../utils/validationUtils");
 const { generateAccessToken, generateRefreshToken, verifyToken } = require("../utils/tokenUtils");
-const { error } = require("console");
-
-
+const { constants } = require("zlib");
 
 const USERS_FILE = path.join(__dirname, "..", "users", "users.json");   //goes up to main directory and back down into users
 
@@ -68,12 +66,9 @@ async function loginUser(username, password) {
   };
 }
 
-function requestFriend(requester, requestee, accessToken) {
-  console.log(requester, requestee, accessToken)
-  verifyToken(accessToken, process.env.JWT_SECRET ||  "defaultSuperSecretKey" );
+function requestFriend(requester, requestee) {
 
   const users = loadJson(USERS_FILE);
-  console.log("LOAD USERS:", requester, requestee, accessToken);
 
   if (!requester || !requestee) {
     return { message: "Missing requester or requestee" };
@@ -113,8 +108,7 @@ function requestFriend(requester, requestee, accessToken) {
   };
 }
 
-function denyFriend(requester, requestee, accessToken) {
-  verifyToken(accessToken, process.env.JWT_SECRET ||  "defaultSuperSecretKey" );
+function denyFriend(requester, requestee) {
   if (!requester || !requestee) {
     return { message: "Missing requester or requestee" };
   }
@@ -132,8 +126,7 @@ function denyFriend(requester, requestee, accessToken) {
   return { message: `You have successfully denied ${requester}` };
 }
 
-function acceptFriend(requester, requestee, accessToken) {
-  verifyToken(accessToken, process.env.JWT_SECRET ||  "defaultSuperSecretKey" );
+function acceptFriend(requester, requestee) {
 
   const users = loadJson(USERS_FILE);
 
@@ -145,9 +138,9 @@ function acceptFriend(requester, requestee, accessToken) {
   const frReqee   = path.join(__dirname, "..", "users", requestee, "friends.json");
   const frReqer   = path.join(__dirname, "..", "users", requester, "friends.json");
 
-  let requests   = loadJson(reqPath);   if (!Array.isArray(requests)) requests = [];
-  let friendsee  = loadJson(frReqee);   if (!Array.isArray(friendsee)) friendsee = [];
-  let friendser  = loadJson(frReqer);   if (!Array.isArray(friendser)) friendser = [];
+  let requests   = loadJson(reqPath);
+  let friendsee  = loadJson(frReqee);
+  let friendser  = loadJson(frReqer);
 
   // Must have pending request
   if (!requests.find(r => r.from === requester)) {
@@ -171,8 +164,82 @@ function acceptFriend(requester, requestee, accessToken) {
   saveJson(frReqer, friendser);
 
   return {
-    message: `${requestee} is your new friend`
+    message: `${requester} is your new friend`
   };
 }
 
-module.exports = { registerUser, loginUser, acceptFriend, requestFriend, denyFriend };
+async function getFriends(username){
+  const users = loadJson(USERS_FILE);
+  if( !users.find( u =>  u.username == username ) ){
+    return( "No existing user" );
+  }
+  const friendsPath   = path.join(__dirname, "..", "users", username, "friends.json");
+  let friends = loadJson(friendsPath);
+
+  return friends;
+}
+
+function changeFavorite( username, friend ){
+  const users = loadJson(USERS_FILE);
+
+  if( !users.find( u =>  u.username == username ) ){
+    return( "No existing user" );
+  }
+
+  const friendspath   = path.join(__dirname, "..", "users", username, "friends.json");
+  let friends = loadJson(friendspath);
+
+  alteredfriend = friends.find( u => u.username == friend);
+
+  console.log(alteredfriend);
+  console.log(friend);
+  console.log(friends);
+
+  alteredfriend.favorite ^= 1;
+
+  saveJson(friendspath, friends);
+
+  return(alteredfriend.favorite)
+}
+
+function removeFriend( username, friend ){
+
+  console.log("THIS IS THE FRIEND VARIABLE", friend);
+  const users = loadJson(USERS_FILE);
+
+  if( !users.find( u =>  u.username == username ) ){
+    return( "No existing user" );
+  }
+
+  const friendspath = path.join(__dirname, "..", "users", username, "friends.json");
+  const friendspath2 = path.join(__dirname, "..", "users", friend, "friends.json");
+
+  let friends = loadJson(friendspath);
+  let friends2 = loadJson(friendspath2);
+
+  friends = friends.filter(u => u.username!= friend);
+  friends2 = friends2.filter(u => u.username!= username);
+
+  saveJson(friendspath, friends);
+  saveJson(friendspath2, friends2)
+}
+
+function getRequests(username){
+  const users = loadJson(USERS_FILE);
+  
+  console.log("username in get requests", username);
+  
+  if( !users.find( u =>  u.username == username ) ){
+    return( "No existing user" );
+  }
+
+  const requestpath = path.join(__dirname, "..", "users", username, "friendRequests.json");
+
+  requests = loadJson(requestpath);
+
+  console.log(requests);
+  
+  return(requests);
+}
+
+module.exports = { registerUser, loginUser, acceptFriend, requestFriend, denyFriend, getFriends, removeFriend, changeFavorite, getRequests };

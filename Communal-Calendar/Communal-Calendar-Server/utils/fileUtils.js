@@ -4,16 +4,16 @@ const path = require("path");
 
 // Load JSON safely
 function loadJson(filePath) {
-  if (!fs.existsSync(filePath)) return {};
+  if (!fs.existsSync(filePath)) return [];
   try {
     const data = fs.readFileSync(filePath, "utf8");
     if(!data){
-      return ({})
+      return ([]);
     }
     return JSON.parse(data);
   } catch (err) {
     console.error(`Error loading JSON from ${filePath}:`, err);
-    return {};
+    return ([]);
   }
 }
 
@@ -31,7 +31,7 @@ function createUserFolder(username) {
   const userDir = path.join(__dirname, "..", "users", username);
   if (!fs.existsSync(userDir)) {
     fs.mkdirSync(userDir);
-    const starterFiles = ["events.json", "categories.json", "friends.json", "friendRequests.json"];
+    const starterFiles = ["events.json", "categories.json", "friends.json", "friendRequests.json", "rsvp.json"];
     starterFiles.forEach(file =>
       fs.writeFileSync(path.join(userDir, file), "[]", "utf8")
     );

@@ -166,13 +166,11 @@ body{
     width: 200px;
     height: 300px;
 }
-.testBox{
-width: 100px;
-height: 100px;
-margin: 35px;
-}
 
-.search-section{
+.testBox{
+    width: 100px;
+    height: 100px;
+    margin: 35px;
 }
 
 .search-item{
@@ -431,8 +429,28 @@ input[type="radio"], input[type="checkbox"]{
     border: #2e2e2e, solid;
     border-radius: 4px;
     font-size: small;
+}
 /* End Catergory Filter CSS*/
 
 #emailInput{
     display: none;
+}
+
+#friends-dropdown{
+    position:relative;
+    width: 120px;
+    background-color:lightgray
+}
+
+#friends-dropdown-content{
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    display: none;
+    background-color:lightgray
+}
+
+#Friends-Drop-Container{
+    display: flex;
+    flex-direction: row;
 }
