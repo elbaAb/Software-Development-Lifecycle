@@ -287,7 +287,7 @@ ipcMain.handle("request-friend", async (event, { requester, requestee, accessTok
       }
     });
 
-    return response.data.message;
+    return response.data;
   }catch(err){
     console.error("Friend request failed:", err);
     throw err;
@@ -308,7 +308,7 @@ ipcMain.handle("accept-friend", async (event, { requester, requestee, accessToke
         }
       });
 
-    return response.data.message;
+    return response.data;
   }catch (err){
     console.error("Accept friend failed:", err);
     throw err;
@@ -329,13 +329,12 @@ ipcMain.handle("deny-friend", async (event, { requester, requestee, accessToken 
       }
     });
 
-    return response.data.message;
+    return response.data;
   }catch (err){
     console.error("Deny friend failed:", err);
     throw err;
   }
 });
-})
 
 ipcMain.handle("change-favorite", async (event, {username, friend, accessToken}) => {
   try{
@@ -349,8 +348,8 @@ ipcMain.handle("change-favorite", async (event, {username, friend, accessToken})
       Authorization: `Bearer ${accessToken}`
       }
     })
-    console.log(result)
-    return response.data.message;
+    console.log(response)
+    return response.data;
   }catch(err){
     console.log(err);
   }
@@ -369,7 +368,7 @@ ipcMain.handle("remove-friend", async (event, {username, friend, accessToken}) =
       }
     })
     
-    return response.data.message;
+    return response.data;
   }catch(err){
     console.log(err);
   }

@@ -316,7 +316,7 @@ function setupAddCategoryPopup() {
 }
 
 
-function LoadUserData() {
+async function LoadUserData() {
   const username = window.sessionStorage.getItem("username");
   const accessToken = window.sessionStorage.getItem("accessToken");
   
@@ -857,14 +857,15 @@ async function changeFavorite(e){
   console.log("WORKS");
   try{
     const accessToken = window.sessionStorage.getItem("accessToken");
-    const friend = e.currentTarget.getAttribute("friend");
+    const button = e.currentTarget;
+    const friend = button.getAttribute("friend");
     const username = sessionStorage.getItem("username");
     const result = await window.electronAPI.changeFavorite(username, friend, accessToken);
     console.log(result)
     if(result){
-      e.currentTarget.textContent = "Unfavorite"
+      button.textContent = "Unfavorite"
     }else{
-      e.currentTarget.textContent = "Favorite"
+      button.textContent = "Favorite"
     }
     return(result);
   }catch(err){
@@ -879,7 +880,6 @@ try{
     const username = sessionStorage.getItem("username");
     const result = await window.electronAPI.removeFriend(username, friend, accessToken);
     getFriends(username, accessToken);
-    parent.remove();
     console.log(result)
     return(result);
   }catch(err){
