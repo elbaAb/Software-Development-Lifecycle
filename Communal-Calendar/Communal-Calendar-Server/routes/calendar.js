@@ -5,14 +5,10 @@ const { loadEvents, addEvent, loadCategories, addCategory } = require("../contro
 
 // GET all events for a user
 router.get("/events/:username", (req, res) => {
-  console.log("1")
   const { username } = req.params;
   try {
-  console.log("2")
     const events = loadEvents(username);
-  console.log("3")
     res.json(events);
-  console.log("4")
   } catch (err) {
     res.status(500).json({ error: "Failed to load events" });
   }
@@ -44,7 +40,6 @@ router.get("/categories/:username", (req, res) => {
 });
 
 router.post("/categories/:username", (req, res) => {
-  console.log("Reached router");
   const { username } = req.params;
   const category = req.body;
 
