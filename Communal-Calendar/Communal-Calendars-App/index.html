@@ -5,29 +5,42 @@
     <link rel="stylesheet" href="base.css" />
     <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
     <meta
-      http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'"
-    />
-    <meta
-      http-equiv="X-Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'"
-    />
+  http-equiv="Content-Security-Policy"
+  content="default-src 'self'; script-src 'self'; img-src 'self' data:"
+/>
+<meta
+  http-equiv="X-Content-Security-Policy"
+  content="default-src 'self'; script-src 'self'; img-src 'self' data:"
+/>
+  
+  
     <title>Communal Calendar</title>
   </head>
   <body>
-    <div class = "nav-bar">
+    <div class="nav-bar">
+      <!-- show Sign In Button when user is not logged in -->
       <div class="signInButton">
         <button>Sign In</button>
       </div>
-      <div class = "nav-button" id = "friends-button">
-
+      
+      <!-- User display shown when user is logged in -->
+<div id="user-display" class="user-display">
+  <div class="profile-container">
+    <img id="profile-picture" class="profile-picture" src="" alt="Profile">
+    <span id="username-display"></span>
+    <div class="profile-menu">
+      <button id="change-profile-pic">Change Picture</button>
+      <button id="sign-out-btn">Sign Out</button>
+    </div>
+  </div>
+</div>
+      
+      <div class="nav-button" id="friends-button"></div>
+      <div class="nav-button" id="filter-button"></div>
+      <div class="nav-button" id="events-button">
+        <button id="toggle-today-btn">Upcoming Events</button>
       </div>
-      <div class = "nav-button" id = "filter-button">
-          
-      </div>
-      <div class = "nav-button" id = "events-button">
-           <button id="toggle-today-btn">Upcoming Events</button>
-      </div>
+      
       <!-- Filter Nav Menu -->
       <div class="filterDropdown">
         <button>Filter</button>
@@ -81,6 +94,8 @@
         </div>
       <!-- End of Add Category Pop Up -->
     </div>
+    <!-- End of Add Category Pop Up -->
+
     <div class="main">
       <div class="calendar-container">
         <div class="calendar">
@@ -111,6 +126,7 @@
                 <label for="End-Date">Final Repeat: </label> <input name="End-Date" id="End-Date" type="date">
               </div>
             </div>
+            
             <div class="search-section">
               <div class="search-item">
                 <label for="Travel-Time">Travel Time: </label> <input name="Travel-Time" id="Travel-Time" type="number" step="5" min = "0" max = "1440" placeholder="Min">
@@ -120,21 +136,22 @@
               </div>
 
               <div class="search-item">
-                  <input type="radio" name="Privacy" id="Privacy-Public" checked> <label for="Privacy-Friends">Friends</label>
+                <input type="radio" name="Privacy" id="Privacy-Public" checked> <label for="Privacy-Friends">Friends</label>
               </div>
 
               <div class="search-item">
-                  <input type="radio" name="Privacy" id="Privacy-Favorite"> <label for="Privacy-Favorite">Favorites Only</label>
+                <input type="radio" name="Privacy" id="Privacy-Favorite"> <label for="Privacy-Favorite">Favorites Only</label>
               </div>
 
               <div class="search-item">
-                  <input type="radio" name="Privacy" id="Privacy-Private"> <label for="Privacy-Private">Private</label>
+                <input type="radio" name="Privacy" id="Privacy-Private"> <label for="Privacy-Private">Private</label>
               </div>
             </div>
             <div class="search-section">
               <div class="search-item">
                 <label for="Repeat">Repeat Frequency</label>
               </div>
+              
               <div class="search-item">
                 <select name="Repeat" id="Repeat">
                   <option value="One-Time">One-Time</option>
@@ -182,15 +199,16 @@
                 </div>
               </div>
             </div>
+            
             <div class="search-section">
               <input class="text-center" type="submit" value="submit">
             </div>
           </form>
         </search>
       </div>
+      
       <div class="right-section text-center">
         <div class="box" id="box3">
-        <!-- Box A: Next Event Today -->
           <div class="box" id="today-box">
             <h3>Next Event Today</h3>
             <input
@@ -203,8 +221,8 @@
           </div>
         </div>
       </div>
-
     </div>
+    
     <script type="module" src="render.js"></script>
     
  <div id="eventPopup" class="event-popup-overlay">

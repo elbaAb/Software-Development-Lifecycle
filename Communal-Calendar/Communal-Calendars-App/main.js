@@ -1,9 +1,8 @@
-const { app, BrowserWindow } = require("electron");         //makes sure electrion is included
+const { app, BrowserWindow, ipcMain, dialog } = require("electron"); // Added dialog
 const path = require("path");                               //initializes path
 const { initializeCalendarData } = require("./calendar");   //creates the calendar inizialization function
 const axios = require("axios");                             //requires the ability to send to remote server
-const { ipcMain } = require("electron");                    
-const { access } = require("fs");
+const fs = require('fs');                                   //required for file operations
 
 function createWindow() {                           //creates the window object with below settings
   const win = new BrowserWindow({
@@ -32,9 +31,128 @@ app.on("window-all-closed", () => {
 });
 
 
+// added new IPC handlers for persistant login and profile pictures
+// Saves user session to disk (username, tokens, etc.)
+ipcMain.handle("save-user-session", async (event, userData) => {
+  try {
+    // Store in app's user data directory
+    const userDataPath = path.join(app.getPath('userData'), 'user-session.json');
+    fs.writeFileSync(userDataPath, JSON.stringify(userData, null, 2));
+    console.log("User session saved for:", userData.username);
+    return true;
+  } catch (error) {
+    console.error("Error saving user session:", error);
+    throw error;
+  }
+});
 
-//below are the functions used to retrieve data from the server.
+// Loads saved user session on app start
+ipcMain.handle("load-user-session", async () => {
+  try {
+    const userDataPath = path.join(app.getPath('userData'), 'user-session.json');
+    if (fs.existsSync(userDataPath)) {
+      const data = fs.readFileSync(userDataPath, 'utf8');
+      const userData = JSON.parse(data);
+      console.log("Loaded saved session for:", userData.username);
+      return userData;
+    }
+    console.log("No saved user session found");
+    return null;
+  } catch (error) {
+    console.error("Error loading user session:", error);
+    return null;
+  }
+});
 
+// Clears saved user session (called on sign out)
+ipcMain.handle("clear-user-session", async () => {
+  try {
+    const userDataPath = path.join(app.getPath('userData'), 'user-session.json');
+    if (fs.existsSync(userDataPath)) {
+      fs.unlinkSync(userDataPath);
+      console.log("User session cleared");
+    }
+    
+    // Also delete profile picture
+    const profilePicPath = path.join(app.getPath('userData'), 'profile-picture.png');
+    if (fs.existsSync(profilePicPath)) {
+      fs.unlinkSync(profilePicPath);
+      console.log("Profile picture cleared");
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("Error clearing user session:", error);
+    throw error;
+  }
+});
+
+// Opens file dialog to select a profile picture
+ipcMain.handle("select-profile-picture", async () => {
+  try {
+    const { canceled, filePaths } = await dialog.showOpenDialog({
+      properties: ['openFile'],
+      filters: [
+        { name: 'Images', extensions: ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'] }
+      ]
+    });
+    
+    if (!canceled && filePaths.length > 0) {
+      // Read image file and convert to base64
+      const imageBuffer = fs.readFileSync(filePaths[0]);
+      const base64Image = imageBuffer.toString('base64');
+      const ext = path.extname(filePaths[0]).toLowerCase().replace('.', '');
+      
+      console.log("Profile picture selected:", filePaths[0]);
+      return {
+        path: filePaths[0],
+        base64: base64Image,
+        mimeType: ext
+      };
+    }
+    return null;
+  } catch (error) {
+    console.error("Error selecting profile picture:", error);
+    throw error;
+  }
+});
+
+// Saves profile picture to disk
+ipcMain.handle("save-profile-picture", async (event, imageData) => {
+  try {
+    const profilePicPath = path.join(app.getPath('userData'), 'profile-picture.png');
+    const buffer = Buffer.from(imageData.base64, 'base64');
+    fs.writeFileSync(profilePicPath, buffer);
+    console.log("Profile picture saved to:", profilePicPath);
+    return profilePicPath;
+  } catch (error) {
+    console.error("Error saving profile picture:", error);
+    throw error;
+  }
+});
+
+// Loads profile picture from disk
+ipcMain.handle("load-profile-picture", async () => {
+  try {
+    const profilePicPath = path.join(app.getPath('userData'), 'profile-picture.png');
+    
+    if (fs.existsSync(profilePicPath)) {
+      const buffer = fs.readFileSync(profilePicPath);
+      const base64Image = buffer.toString('base64');
+      console.log("Profile picture loaded");
+      return `data:image/png;base64,${base64Image}`;
+    }
+    console.log("No profile picture found");
+    return null;
+  } catch (error) {
+    console.error("Error loading profile picture:", error);
+    return null;
+  }
+});
+
+
+
+// Handles user login
 ipcMain.handle("login-user", async (event, { username, password }) => {
   try {
     const response = await axios.post("http://localhost:3000/users/login", {
@@ -50,6 +168,7 @@ ipcMain.handle("login-user", async (event, { username, password }) => {
   }
 });
 
+// Handles event creation
 ipcMain.handle("create-event", async (event, { username, eventData, accessToken }) => {
   try {
     const response = await axios.post(
@@ -69,6 +188,7 @@ ipcMain.handle("create-event", async (event, { username, eventData, accessToken 
   }
 });
 
+// Retrieves events for a user
 ipcMain.handle("get-events", async (event, { username, accessToken }) => {
   try {
     const response = await axios.get(`http://localhost:3000/calendar/events/${username}`, {
@@ -83,6 +203,7 @@ ipcMain.handle("get-events", async (event, { username, accessToken }) => {
   }
 });
 
+// Retrieves categories for a user
 ipcMain.handle("get-friends", async (event, { username, accessToken }) => {
   try {
     const response = await axios.get(`http://localhost:3000/users/friends/${username}`, {
@@ -111,6 +232,7 @@ ipcMain.handle("retrieve-categories", async (event, { username, accessToken }) =
   }
 });
 
+// Creates a new category
 ipcMain.handle("create-category", async (event, { username, category, accessToken }) => {
   try {
     const response = await axios.post(`http://localhost:3000/calendar/categories/${username}`, 
@@ -128,6 +250,8 @@ ipcMain.handle("create-category", async (event, { username, category, accessToke
     throw err;
   }
 });
+
+// Handles user registration
 ipcMain.handle("register-user", async (event, { email, username, password }) => {
   try {
     const response = await axios.post("http://localhost:3000/users/register", {
@@ -143,14 +267,15 @@ ipcMain.handle("register-user", async (event, { email, username, password }) => 
       });
     return response.data; // { accessToken, refreshToken, message }
   } catch (err) {
-    console.error("Login failed:", err.message);
+    console.error("Registration failed:", err.message);
     throw err;
   }
 });
 
-ipcMain.handle("request-friend", async (event, {requester, requestee, accessToken}) => {
+// Sends a friend request
+ipcMain.handle("request-friend", async (event, { requester, requestee, accessToken }) => {
   try{
-    console.log(accessToken);
+    console.log("Sending friend request:", {requester, requestee});
     const response = await axios.post(`http://localhost:3000/users/requestfriend`, {
       requester, 
       requestee, 
@@ -164,11 +289,13 @@ ipcMain.handle("request-friend", async (event, {requester, requestee, accessToke
 
     return response.data.message;
   }catch(err){
-    console.log(err)
+    console.error("Friend request failed:", err);
+    throw err;
   }
-})
+});
 
-ipcMain.handle("accept-friend",async (event, {requester, requestee, accessToken}) => {
+// Accepts a friend request
+ipcMain.handle("accept-friend", async (event, { requester, requestee, accessToken }) => {
   try{
     const response = await axios.post(`http://localhost:3000/users/acceptfriend`, {
       requester, 
@@ -183,11 +310,13 @@ ipcMain.handle("accept-friend",async (event, {requester, requestee, accessToken}
 
     return response.data.message;
   }catch (err){
-    console.log(err);
+    console.error("Accept friend failed:", err);
+    throw err;
   }
-})
+});
 
-ipcMain.handle("deny-friend",async (event, {requester, requestee, accessToken}) => {
+// Denies a friend request
+ipcMain.handle("deny-friend", async (event, { requester, requestee, accessToken }) => {
   try{
     const response = await axios.post(`http://localhost:3000/users/denyfriend`, {
       requester, 
@@ -202,8 +331,10 @@ ipcMain.handle("deny-friend",async (event, {requester, requestee, accessToken}) 
 
     return response.data.message;
   }catch (err){
-    console.log(err);
+    console.error("Deny friend failed:", err);
+    throw err;
   }
+});
 })
 
 ipcMain.handle("change-favorite", async (event, {username, friend, accessToken}) => {

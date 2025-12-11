@@ -24,36 +24,35 @@ async function formSubmit(event) {
   const travelTimeRaw = document.getElementById("Travel-Time").value || 0;
   const travelTime = parseInt(travelTimeRaw, 10) || 0;
 
-  //Splits time strings into hours and minutes (11:30 -> startHour = 11 and startMinute = 30) and converts them to numbers
+  //Splits time strings into hours and minutes
   const [startHour, startMinute] = startTime.split(':').map(Number);
   const [endHour, endMinute] = endTime.split(':').map(Number);
 
-  //Doing the same for the actual date and creates the starting date for the loop
+  //Doing the same for the actual date
   let [y, m, d] = startDate.split('-').map(Number);
-  let currentDate = new Date(y, m-1, d); //No idea why month was added by 1 by default but just subtracting 1 fixes it
+  let currentDate = new Date(y, m-1, d);
 
   //Same for end date
   const [endY, endM, endD] = endDate.split('-').map(Number);
-  const lastDate = new Date(endY, endM-1, endD); //Same here
+  const lastDate = new Date(endY, endM-1, endD);
 
   //Array to cast to JSON
   const eventDates = [];
 
   while (currentDate <= lastDate) {
     if (selectedDays.includes(currentDate.getDay())) {
-            
-      //Creating the start and end dates then setting their hours and minutes (The 0 are for seconds and milliseconds)
       let startDateTime = new Date(currentDate);
       startDateTime.setHours(startHour, startMinute, 0, 0);
       if (travelTime) startDateTime.setMinutes(startDateTime.getMinutes() - travelTime);
 
       let endDateTime = new Date(currentDate);
       endDateTime.setHours(endHour, endMinute, 0, 0);
+
       if (travelTime) endDateTime.setMinutes(endDateTime.getMinutes() + travelTime);
       //This puts the date into the array created earlier in local time using toLocaleString()
       eventDates.push({ start: startDateTime.toLocaleString(), end: endDateTime.toLocaleString()});
     }
-    currentDate.setDate(currentDate.getDate() + 1); //Gets the next date
+    currentDate.setDate(currentDate.getDate() + 1);
   }
 
   const NewEvent = { eventName, startDate, startTime, endTime, endDate, privacy, repeat, friends, eventDates};
@@ -62,6 +61,7 @@ async function formSubmit(event) {
   
   await createEvent(sessionStorage.getItem("username"), NewEvent);
 }
+
 
 function setupFilterCheckbox(checkbox, categoryName) {
   if (!checkbox) return;
@@ -115,7 +115,6 @@ function setupAllFilterCheckboxes() {
   });
 }
 
-//creates the filter checkboxes in the top right
 function SetFilter(categories) {
   const FilterContent = document.getElementById("filterMenuStuff");
   categories.forEach(category => {
@@ -128,12 +127,10 @@ function SetFilter(categories) {
     label.insertBefore(check, label.firstChild);
     FilterContent.appendChild(label);
 
-    // use centralized wiring so both schedule items and boxes are toggled
     setupFilterCheckbox(check, category.name);
   });
 }
 
-//applies category colors to the different events
 function ApplyCategories(categories) {
   categories.forEach(category => {
     const items = document.getElementsByClassName(category.name);
@@ -147,7 +144,7 @@ function ApplyCategories(categories) {
   });
 }
 
-// Sign‑in popup logic
+
 function setupSignInPopup() {
   const signInButton = document.querySelector(".signInButton > button");
   const signInOverlay = document.querySelector(".signInPopUpOverlay");
@@ -211,7 +208,8 @@ function setupSignInPopup() {
     })
   }
 }
-// Add Category popup logic
+
+
 function setupAddCategoryPopup() {
   const addCategoryButton = document.querySelector("#addCategoryBtn");
   const addCategoryOverlay = document.querySelector(".addCategoryPopupOverlay");
@@ -223,7 +221,6 @@ function setupAddCategoryPopup() {
   const filterMenu = document.querySelector("#filterMenuStuff");
   const categoryDisplay = document.getElementById("category-display") || document.querySelector(".main");
 
-  //This just gets a contrasting color (black or white) based on the background color provided
   function getContrastColor(hex) {
     try {
       const c = hex.replace("#", "");
@@ -261,7 +258,7 @@ function setupAddCategoryPopup() {
         const categoryFormat = {
           Name: categoryName,
           Color: categoryColor,
-          Privacy: categoryPrivacy //Change to what the user selects in the future
+          Privacy: categoryPrivacy
         };
         const username = window.sessionStorage.getItem("username");
         const accessToken = window.sessionStorage.getItem("accessToken");
@@ -318,57 +315,307 @@ function setupAddCategoryPopup() {
     }
 }
 
-// DOMContentLoaded wrapper to initialize everything
-async function LoadUserData() {
-  const accessToken = window.sessionStorage.getItem("accessToken");
+
+function LoadUserData() {
   const username = window.sessionStorage.getItem("username");
-  console.log("YIPEE")
-  await getCategories(username, accessToken);
-  console.log("YIPEE1")
-  await getEvents(username, accessToken);
-  console.log("YIPEE2")
+  const accessToken = window.sessionStorage.getItem("accessToken");
+  
+  // Check if user is logged in before loading data
+  if (!username) {
+    console.log("No user logged in, skipping data load");
+    return;
+  }
+  
+  console.log("Loading data for user:", username);
+  await getCategories(username);
+  await getEvents(username);
   await getFriends(username, accessToken);
-  console.log("YIPEE3")
+
+  const form = document.getElementById("get-calendar-data");
+  const request = document.getElementById("request-friend demo2");
+  const accept = document.getElementById("accept-friend demo2");
+  const deny = document.getElementById("deny-friend demo2");
+
+  console.log("test 1/4")
+  if (form) {
+    form.addEventListener("submit", formSubmit);
+  }
+  if(request){
+  console.log("test 2/4")
+    request.addEventListener("click", requestFriend);
+  }
+  if(accept){
+  console.log("test 3/4")
+    accept.addEventListener("click", acceptFriend)
+  }
+  if(deny){
+  console.log("test 4/4")
+    deny.addEventListener("click", denyFriend)
+  }
 };
 
 
+document.addEventListener("DOMContentLoaded", async (event) =>{
+  setupSignInPopup();
+  setupAddCategoryPopup();
+  setupAllFilterCheckboxes();
+  setupProfilePictureHandlers();  // Set up profile picture change and sign out handlers
+  
+  // Check for saved user session when app starts
+  await checkSavedUserOnStart();
+})
+
+
+/**
+ * Updates the nav bar to show user display instead of Sign In button
+ * @param {Object} userData - User data including username and tokens
+ */
+function updateUserDisplay(userData) {
+  const userDisplay = document.getElementById('user-display');
+  const usernameDisplay = document.getElementById('username-display');
+  const profilePic = document.getElementById('profile-picture');
+  const signInButton = document.querySelector('.signInButton');
+  
+  if (userData && userData.username) {
+    // Show user display - add the "show" class
+    userDisplay.classList.add('show');
+    usernameDisplay.textContent = userData.username;
+    
+    // Hide Sign In button
+    if (signInButton) {
+      signInButton.style.display = 'none';
+    }
+    
+    // Load and display profile picture
+    loadAndDisplayProfilePicture();
+    
+    // Hide sign-in popup if it's open
+    const signInOverlay = document.querySelector('.signInPopUpOverlay');
+    if (signInOverlay) {
+      signInOverlay.style.display = 'none';
+    }
+    
+    console.log("User display updated for:", userData.username);
+  } else {
+    // Show Sign In button, hide user display - remove the "show" class
+    userDisplay.classList.remove('show');
+    if (signInButton) {
+      signInButton.style.display = 'block';
+    }
+    console.log("Showing Sign In button - no user logged in");
+  }
+}
+
+/**
+ * Loads profile picture from disk or creates default with user's initial
+ */
+async function loadAndDisplayProfilePicture() {
+  try {
+    const profilePic = document.getElementById('profile-picture');
+    if (!profilePic) return;
+    
+    // Try to load saved profile picture
+    const savedPic = await window.electronAPI.loadProfilePicture();
+    if (savedPic) {
+      profilePic.src = savedPic;
+      console.log("Loaded saved profile picture");
+    } else {
+      // Create default profile picture with user's initial
+      const username = window.sessionStorage.getItem('username') || '';
+      const initial = username.charAt(0).toUpperCase() || 'U';
+      
+      // Create SVG circle with user's initial
+      const svgString = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+          <circle cx="16" cy="16" r="16" fill="#4a90e2"/>
+          <text x="16" y="22" text-anchor="middle" fill="white" font-size="14" font-family="Arial">
+            ${initial}
+          </text>
+        </svg>
+      `;
+      profilePic.src = 'data:image/svg+xml;base64,' + btoa(svgString);
+      console.log("Created default profile picture with initial:", initial);
+    }
+  } catch (error) {
+    console.error('Error loading profile picture:', error);
+  }
+}
+
+/**
+ * Sets up event handlers for profile picture change and sign out buttons
+ */
+function setupProfilePictureHandlers() {
+  const changeProfilePicBtn = document.getElementById('change-profile-pic');
+  const signOutBtn = document.getElementById('sign-out-btn');
+  
+  if (changeProfilePicBtn) {
+    changeProfilePicBtn.addEventListener('click', async () => {
+      try {
+        console.log("Opening file dialog for profile picture...");
+        const imageData = await window.electronAPI.selectProfilePicture();
+        
+        if (imageData) {
+          console.log("Profile picture selected, saving...");
+          // Save the profile picture to disk
+          await window.electronAPI.saveProfilePicture(imageData);
+          
+          // Update display immediately
+          const profilePic = document.getElementById('profile-picture');
+          if (profilePic && imageData.base64) {
+            const mimeType = imageData.mimeType || 'png';
+            profilePic.src = `data:image/${mimeType};base64,${imageData.base64}`;
+            console.log("Profile picture updated");
+          }
+        } else {
+          console.log("No profile picture selected");
+        }
+      } catch (error) {
+        console.error('Error changing profile picture:', error);
+        alert('Failed to change profile picture. Please try again.');
+      }
+    });
+  }
+  
+  if (signOutBtn) {
+    signOutBtn.addEventListener('click', async () => {
+      try {
+        console.log("Signing out...");
+        // Clear persistent session data
+        await window.electronAPI.clearUserSession();
+        
+        // Clear session storage (temporary)
+        window.sessionStorage.clear();
+        
+        // Update UI to show Sign In button again
+        updateUserDisplay(null);
+        
+        console.log("Signed out successfully");
+        alert("You have been signed out.");
+      } catch (error) {
+        console.error('Error signing out:', error);
+        alert('Error signing out. Please try again.');
+      }
+    });
+  }
+}
+
+/**
+ * Checks for saved user session when app starts
+ * @returns {Promise<boolean>} True if user was automatically logged in
+ */
+async function checkSavedUserOnStart() {
+  try {
+    console.log("Checking for saved user session...");
+    const userData = await window.electronAPI.loadUserSession();
+    
+    if (userData && userData.username && userData.accessToken) {
+      console.log('Found saved session for user:', userData.username);
+      
+      // Restore user data to sessionStorage (for existing code compatibility)
+      window.sessionStorage.setItem("username", userData.username);
+      window.sessionStorage.setItem("accessToken", userData.accessToken);
+      if (userData.refreshToken) {
+        window.sessionStorage.setItem("refreshToken", userData.refreshToken);
+      }
+      
+      // Update UI to show user is logged in (replaces Sign In button)
+      updateUserDisplay(userData);
+      
+      // Load user's calendar data
+      LoadUserData();
+      
+      return true;
+    } else {
+      console.log("No saved user session found");
+    }
+  } catch (error) {
+    console.error('Error loading saved user session:', error);
+  }
+  
+  return false;
+}
+
+
+/**
+ * Logs in a user and saves session persistently
+ */
 async function loginUser(username, password) {
   try {
+    console.log("Attempting login for:", username);
     const { accessToken, refreshToken } = await window.electronAPI.loginUser(username, password);
     console.log("Login successful");
-    console.log("Access Token:", accessToken);
-    console.log("Refresh Token:", refreshToken);
-
-    // Store tokens in memory or localStorage if needed
+    
+    // Store tokens in sessionStorage (temporary, for existing code)
     window.sessionStorage.setItem("username", username);
     window.sessionStorage.setItem("accessToken", accessToken);
     window.sessionStorage.setItem("refreshToken", refreshToken);
-
+    
+    // Save user data persistently to disk
+    const userData = {
+      username,
+      accessToken,
+      refreshToken,
+      loggedInAt: new Date().toISOString()
+    };
+    
+    await window.electronAPI.saveUserSession(userData);
+    console.log("User session saved persistently");
+    
+    // Update UI to show user display (replaces Sign In button)
+    updateUserDisplay(userData);
+    
+    // Load user's calendar data
     LoadUserData();
+    
     return { accessToken, refreshToken };
   } catch (err) {
     console.error("Login failed:", err);
+    alert("Login failed. Please check your username and password.");
+    throw err;
   }
 }
 
-async function registerUser(email, username, password){
+
+/**
+ * Registers a new user and saves session persistently
+ */
+async function registerUser(email, username, password) {
   try {
+    console.log("Attempting registration for:", username);
     const { accessToken, refreshToken } = await window.electronAPI.registerUser(email, username, password);
     console.log("Registration successful");
-    console.log("Access Token:", accessToken);
-    console.log("Refresh Token:", refreshToken);
-
-    // Store tokens in memory or localStorage if needed
+    
+    // Store tokens in sessionStorage
     window.sessionStorage.setItem("username", username);
     window.sessionStorage.setItem("accessToken", accessToken);
     window.sessionStorage.setItem("refreshToken", refreshToken);
-
+    
+    // Save user data persistently to disk
+    const userData = {
+      username,
+      email,
+      accessToken,
+      refreshToken,
+      loggedInAt: new Date().toISOString()
+    };
+    
+    await window.electronAPI.saveUserSession(userData);
+    console.log("User session saved persistently");
+    
+    // Update UI to show user display (replaces Sign In button)
+    updateUserDisplay(userData);
+    
+    // Load user's calendar data
     LoadUserData();
+    
     return { accessToken, refreshToken };
   } catch (err) {
     console.error("Registration failed:", err);
+    alert("Registration failed. Please try a different username or email.");
+    throw err;
   }
 }
+
 
 async function createEvent(username, eventData) {
   try {

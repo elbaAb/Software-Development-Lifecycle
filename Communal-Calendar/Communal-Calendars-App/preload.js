@@ -5,6 +5,7 @@
 */
 const { contextBridge, ipcRenderer } = require("electron"); //imports context bridge via electron
 contextBridge.exposeInMainWorld("electronAPI", {    //exposes certain api features to renderer
+  
   getCategories: (username, accessToken) => ipcRenderer.invoke("retrieve-categories", { username, accessToken }),
   getEvents: (username, accessToken) => ipcRenderer.invoke("get-events", { username, accessToken }),
   getFriends: (username, accessToken) => ipcRenderer.invoke("get-friends", { username, accessToken }),
@@ -18,5 +19,11 @@ contextBridge.exposeInMainWorld("electronAPI", {    //exposes certain api featur
   denyFriend: (requester, requestee, accessToken) => ipcRenderer.invoke("deny-friend", { requester, requestee, accessToken }),
   changeFavorite: (username, friend, accessToken) => ipcRenderer.invoke("change-favorite", { username, friend, accessToken }),
   removeFriend: (username, friend, accessToken) => ipcRenderer.invoke("remove-friend", { username, friend, accessToken }),
-  getRequests: (username, accessToken) => ipcRenderer.invoke("get-requests", { username, accessToken })
+  getRequests: (username, accessToken) => ipcRenderer.invoke("get-requests", { username, accessToken }),
+  saveUserSession: (userData) => ipcRenderer.invoke("save-user-session", userData),
+  loadUserSession: () => ipcRenderer.invoke("load-user-session"),
+  clearUserSession: () => ipcRenderer.invoke("clear-user-session"),
+  selectProfilePicture: () => ipcRenderer.invoke("select-profile-picture"),
+  saveProfilePicture: (imageData) => ipcRenderer.invoke("save-profile-picture", imageData),
+  loadProfilePicture: () => ipcRenderer.invoke("load-profile-picture")
 })
