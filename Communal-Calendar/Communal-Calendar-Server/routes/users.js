@@ -2,7 +2,7 @@
 const express = require("express");
 const router = express.Router();
 
-const { registerUser, loginUser , requestFriend, acceptFriend, denyFriend} = require("../controllers/users");
+const { registerUser, loginUser , requestFriend, acceptFriend, denyFriend, getFriends, changeFavorite, removeFriend, getRequests} = require("../controllers/users");
 const { verifyToken } = require("../utils/tokenUtils");
 
 router.post("/register", async (req, res) => {
@@ -29,8 +29,8 @@ router.post("/login", async (req, res) => {
 router.post("/requestfriend", async (req, res) => {
   console.log("REQUEST")
   try{
-    const {requester, requestee, accessToken} = req.body;
-    const result = requestFriend(requester, requestee, accessToken);
+    const {requester, requestee} = req.body;
+    const result = requestFriend(requester, requestee);
     res.json(result)
   }catch (err) {
     res.status(400).json({ error: err.message })
@@ -38,10 +38,9 @@ router.post("/requestfriend", async (req, res) => {
 })
 
 router.post("/acceptfriend", async (req, res) => {
-  console.log("ACCEPT")
   try{
-    const {requester, requestee, accessToken} = req.body;
-    const result = acceptFriend(requester, requestee, accessToken);
+    const {requester, requestee} = req.body;
+    const result = acceptFriend(requester, requestee);
     res.json(result)
   }catch (err) {
     res.status(400).json({ error: err.message })
@@ -49,14 +48,59 @@ router.post("/acceptfriend", async (req, res) => {
 })
 
 router.post("/denyfriend", async (req, res) => {
-  console.log("DENY")
   try{
-    const {requester, requestee, accessToken} = req.body;
-    const result = denyFriend(requester, requestee, accessToken);
+    const {requester, requestee} = req.body;
+    const result = denyFriend(requester, requestee);
     res.json(result)
   }catch (err) {
     res.status(400).json({ error: err.message })
   }
 })
 
+router.post("/changefavorite", async (req, res) => {
+  try{
+    const { username, friend } = req.body;
+    const result = changeFavorite( username, friend );
+    console.log("result", result);
+    res.json(result);
+  }catch(err){
+    res.status(400).json({ error: err.message })
+  }
+})
+
+router.post("/removefriend", async (req, res) => {
+  try{
+    const { username, friend } = req.body;
+    const result = removeFriend( username, friend );
+    res.json(result);
+  }catch(err){
+    res.status(400).json({ error: err.message })
+  }
+})
+
+router.get("/friends/:username", async (req, res) => {
+  try {
+    let { username } = req.params;
+    const result = await getFriends(username);
+    res.json(result);
+  } catch(err){
+    res.status(400).json({ error: err.message });
+  }
+})
+
+router.get("/getrequests/:username", async (req, res) => {
+  try{
+    const { username } = req.params;
+    const result = getRequests(username);
+
+    res.json(result);
+  }catch(err){
+    res.status(400).json({ error:err.message })
+  }
+})
+
+
+
+
 module.exports = router;
+

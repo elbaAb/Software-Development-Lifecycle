@@ -1,4 +1,4 @@
-function formSubmit(event) {
+async function formSubmit(event) {
   event.preventDefault();
 
   const eventName = document.getElementById("Event").value;
@@ -8,7 +8,7 @@ function formSubmit(event) {
   const endDate = document.getElementById("End-Date").value || startDate;
   const privacy = document.querySelector("input[name=Privacy]:checked")?.id;
   const repeat = document.getElementById("Repeat").value;
-  const friends = Array.from(document.querySelectorAll("input[name=Friend]:checked")).map(f => f.id) || false;
+  const friends = Array.from(document.querySelectorAll("input[friend]:checked")).map(f => f.getAttribute("friend")) || false;
 
   //Assigning corresponding days to numbers
   const dayMap = {
@@ -20,7 +20,9 @@ function formSubmit(event) {
     friday: 5,
     saturday: 6
   };
-  const selectedDays = Array.from(document.querySelectorAll('input[name=Day]:checked')).map(day => dayMap[day.id]);
+  const selectedDays = Array.from(document.querySelectorAll('input[name=Day]:checked')).map(day => dayMap[day.id]); //Similar to friends, maps the selected days to their numbers
+  const travelTimeRaw = document.getElementById("Travel-Time").value || 0;
+  const travelTime = parseInt(travelTimeRaw, 10) || 0;
 
   //Splits time strings into hours and minutes
   const [startHour, startMinute] = startTime.split(':').map(Number);
@@ -41,10 +43,13 @@ function formSubmit(event) {
     if (selectedDays.includes(currentDate.getDay())) {
       let startDateTime = new Date(currentDate);
       startDateTime.setHours(startHour, startMinute, 0, 0);
+      if (travelTime) startDateTime.setMinutes(startDateTime.getMinutes() - travelTime);
 
       let endDateTime = new Date(currentDate);
       endDateTime.setHours(endHour, endMinute, 0, 0);
 
+      if (travelTime) endDateTime.setMinutes(endDateTime.getMinutes() + travelTime);
+      //This puts the date into the array created earlier in local time using toLocaleString()
       eventDates.push({ start: startDateTime.toLocaleString(), end: endDateTime.toLocaleString()});
     }
     currentDate.setDate(currentDate.getDate() + 1);
@@ -52,7 +57,9 @@ function formSubmit(event) {
 
   const NewEvent = { eventName, startDate, startTime, endTime, endDate, privacy, repeat, friends, eventDates};
 
-  createEvent(sessionStorage.getItem("username"), NewEvent);
+  console.log(NewEvent)
+  
+  await createEvent(sessionStorage.getItem("username"), NewEvent);
 }
 
 
@@ -144,6 +151,7 @@ function setupSignInPopup() {
   const closePopup = document.querySelector(".closeSignInPopUp");
   const signInSubmit = document.querySelector("#signInSubmit");
   const userNameInput = document.querySelector("#userNameInput");
+  userNameInput.style.zIndex = "99999";
   const passwordInput = document.querySelector("#passwordInput");
   const registerAccount = document.getElementById("Register-Account");
   const emailInput = document.getElementById("emailInput");
@@ -171,7 +179,6 @@ function setupSignInPopup() {
           passwordInput.value = "";
           loginUser(username, password);
         } else {
-          alert("Please enter a username and password.");
         }
       }else{
         const username = userNameInput.value;
@@ -184,7 +191,6 @@ function setupSignInPopup() {
           emailInput.value = "";
           registerUser(email, username, password);
         } else {
-          alert("Please enter an email, username, and password.");
         }
       }
     });
@@ -312,6 +318,7 @@ function setupAddCategoryPopup() {
 
 function LoadUserData() {
   const username = window.sessionStorage.getItem("username");
+  const accessToken = window.sessionStorage.getItem("accessToken");
   
   // Check if user is logged in before loading data
   if (!username) {
@@ -320,8 +327,9 @@ function LoadUserData() {
   }
   
   console.log("Loading data for user:", username);
-  getCategories(username);
-  getEvents(username);
+  await getCategories(username);
+  await getEvents(username);
+  await getFriends(username, accessToken);
 
   const form = document.getElementById("get-calendar-data");
   const request = document.getElementById("request-friend demo2");
@@ -620,9 +628,24 @@ async function createEvent(username, eventData) {
   }
 }
 
-async function getEvents(username) {
+function setupFriendsDropdown(e) {
+  let friends_button = document.getElementById("friends-dropdown-button");
+  let content = document.getElementById("friends-dropdown-content");
+
+  friends_button.addEventListener("click", () => {
+
+    if(content.style.display == "none"){
+      content.style.display = "block";
+    }else {
+      content.style.display = "none";
+    }
+  })
+
+
+}
+
+async function getEvents(username, accessToken) {
   try {
-    const accessToken = window.sessionStorage.getItem("accessToken");
     const events = await window.electronAPI.getEvents(username, accessToken);
     console.log("Events:", events);
     return events;
@@ -631,9 +654,33 @@ async function getEvents(username) {
   }
 }
 
-async function getCategories(username) {
+async function getRSVP(username, accessToken){
+  try{
+    const rsvp = await window.electronAPI.getRSVP(username, accesstoken);
+
+    for( let item of rsvp ){
+      container = document.createElement("div");
+      title = document.createElement("h2");
+      date = document.createElement("h3");
+      time = document.createElement("h3");
+      days = document.createElement("p")
+
+      title.textContent = item.eventName;
+      date.textContent = `${item.startDate} - ${item.endDate}`
+      time.textContent = `${item.startTime} - ${item.endTime}`
+
+      for( let day of item.event){
+
+      }
+    }
+  }
+  catch(err){
+
+  }
+}
+
+async function getCategories(username, accessToken) {
   try {
-    const accessToken = window.sessionStorage.getItem("accessToken");
     const categories = await window.electronAPI.getCategories(username, accessToken);
     console.log("Categories:", categories);
     return categories;
@@ -642,14 +689,136 @@ async function getCategories(username) {
   }
 }
 
+async function getFriends(username, accessToken) {
+  try {
+    const friends = await window.electronAPI.getFriends(username, accessToken);
+    console.log("Friends:", friends);
+
+    let content = document.getElementById("friends-dropdown-content");
+    let rsvpFriends = document.getElementById("search-friends-section");
+
+    content.innerHTML = "";     // clear these so if you relogin it doesn't refill them
+    rsvpFriends.innerHTML = "";
+
+    const requests = await getRequests(username, accessToken);
+
+    console.log(requests);
+
+    for( let request of requests ){
+      console.log("Friend request ", request);
+
+      let container = document.createElement("div");
+      container.setAttribute("request", request.from);
+      let name = document.createElement("div");
+      name.textContent = request.from;
+      let accept = document.createElement("button");
+      accept.textContent = "Accept";
+      accept.setAttribute("friend", request.from);
+      accept.addEventListener("click", acceptFriend);
+      let decline = document.createElement("button");
+      decline.textContent = "Decline";
+      decline.setAttribute("friend", request.from);
+      decline.addEventListener("click", denyFriend);
+
+      container.appendChild(name)
+      container.appendChild(accept);
+      container.appendChild(decline);
+
+      content.appendChild(container);
+    }
+
+    if (content) {
+      for (let i = 0; i < friends.length; i++) {
+        // Base container with name + checkbox
+        let container = document.createElement("div");
+        container.className = "Friends-Drop-Container";
+        container.setAttribute("friendParent",  friends[i].username)
+
+        let name = document.createElement("label");
+
+        let check = document.createElement("input");
+        check.type = "checkbox";
+        check.checked = false;
+        check.setAttribute("friend", friends[i].username);
+        name.appendChild(check);
+
+        name.appendChild(document.createTextNode(friends[i].username));
+        container.appendChild(name);
+
+        if (friends[i].favorite) {
+          container.className = "Friends-Drop-Container favoriteFriend";
+        }
+
+        // Clone the base container for each section
+        let rsvpClone = container.cloneNode(true);
+        let contentClone = container.cloneNode(true);
+
+        // Add buttons ONLY to the content clone
+        let favorite = document.createElement("button");
+        favorite.setAttribute("friend", friends[i].username);
+        favorite.addEventListener("click", changeFavorite);
+        favorite.textContent = friends[i].favorite ? "Unfavorite" : "Favorite";
+
+        let remove = document.createElement("button");
+        remove.setAttribute("friend", friends[i].username);
+        remove.addEventListener("click", removeFriend);
+        remove.textContent = "Remove";
+
+        contentClone.appendChild(favorite);
+        contentClone.appendChild(remove);
+
+        // Append to each section
+        rsvpFriends.appendChild(rsvpClone);
+        content.appendChild(contentClone);
+
+        // Attach checkbox listener to both clones
+        let rsvpCheckbox = rsvpClone.querySelector("input[type=checkbox]");
+        if (rsvpCheckbox) {
+          rsvpCheckbox.addEventListener("change", toggleFriendEvents);
+        }
+        let contentCheckbox = contentClone.querySelector("input[type=checkbox]");
+        if (contentCheckbox) {
+          contentCheckbox.addEventListener("change", toggleFriendEvents);
+        }
+      }
+    }
+
+    // Add search section at the bottom of content
+    let searchSection = document.createElement("div");
+    searchSection.className = "Friends-Drop-Container";
+    let searchFriend = document.createElement("input");
+    searchFriend.id = "friend-request-search";
+    searchFriend.type = "text";
+    let friendSubmit = document.createElement("button");
+    friendSubmit.textContent = "Add Friend";
+    friendSubmit.addEventListener("click", requestFriend);
+    searchSection.appendChild(searchFriend);
+    searchSection.appendChild(friendSubmit);
+    content.appendChild(searchSection);
+
+  } catch (err) {
+    console.error("Failed to retrieve friends:", err);
+  }
+}
+
+function toggleFriendEvents(e){
+
+}
+
 async function requestFriend(e) {
   try{
+    const searchFriend = document.getElementById("friend-request-search")
     const accessToken = window.sessionStorage.getItem("accessToken");
-    const event = e.currentTarget;
-    const requestee = event.id.split(" ").pop();
+    const requestee = searchFriend.value;
     const requester = sessionStorage.getItem("username");
+    console.log(requester);
+    console.log(requestee);
+    
+    if(requestee == requester) {
+      return("you cannot friend yourself");
+    }
+
     const friendRequest = await window.electronAPI.requestFriend(requester, requestee, accessToken);
-    alert(friendRequest);
     return(friendRequest);
   } catch (err) {
     console.error("Failed send friend Request:", err);
@@ -660,12 +829,11 @@ async function acceptFriend(e) {
   try{
     const accessToken = window.sessionStorage.getItem("accessToken");
     const event = e.currentTarget;
-    const requester = event.id.split(" ").pop();
+    const requester = event.getAttribute("friend")
     const requestee = sessionStorage.getItem("username");
-    const requesterTEMP = requestee;
-    const requesteeTEMP = requester;
-    const friend = await window.electronAPI.acceptFriend(requesterTEMP, requesteeTEMP, accessToken);
-    alert(friend);
+    const friend = await window.electronAPI.acceptFriend(requester, requestee, accessToken); 
+
+    getFriends(requestee, accessToken);
     return(friend);
   } catch(err){
     console.log(err);
@@ -676,14 +844,270 @@ async function denyFriend(e) {
   try{
     const accessToken = window.sessionStorage.getItem("accessToken");
     const event = e.currentTarget;
-    const requester = event.id.split(" ").pop();
+    const requester = event.getAttribute("friend")
     const requestee = sessionStorage.getItem("username");
-    const requesterTEMP = requestee;
-    const requesteeTEMP = requester;
-    const friend = await window.electronAPI.denyFriend(requesterTEMP, requesteeTEMP, accessToken);
-    alert(friend);
+    getFriends(requestee, accessToken)
     return(friend);
   } catch(err){
     console.log(err);
   }
 }
+
+async function changeFavorite(e){
+  console.log("WORKS");
+  try{
+    const accessToken = window.sessionStorage.getItem("accessToken");
+    const friend = e.currentTarget.getAttribute("friend");
+    const username = sessionStorage.getItem("username");
+    const result = await window.electronAPI.changeFavorite(username, friend, accessToken);
+    console.log(result)
+    if(result){
+      e.currentTarget.textContent = "Unfavorite"
+    }else{
+      e.currentTarget.textContent = "Favorite"
+    }
+    return(result);
+  }catch(err){
+    console.log("failed to change favorite: ", err)
+  }
+}
+
+async function removeFriend(e){
+try{
+    const accessToken = window.sessionStorage.getItem("accessToken");
+    const friend = e.currentTarget.getAttribute("friend");
+    const username = sessionStorage.getItem("username");
+    const result = await window.electronAPI.removeFriend(username, friend, accessToken);
+    getFriends(username, accessToken);
+    parent.remove();
+    console.log(result)
+    return(result);
+  }catch(err){
+    console.log("failed to remove friend: ", err)
+  }
+}
+
+async function getRequests(username, accessToken){
+try{
+    const result = await window.electronAPI.getRequests(username, accessToken);
+    console.log(result)
+    return(result);
+  }catch(err){
+    console.log("failed to remove friend: ", err)
+  }
+}
+document.addEventListener("DOMContentLoaded", async () => {
+    const grid = document.getElementById("calendarGrid");
+    const calendarBox = document.getElementById("calendarBox");
+
+    if (!grid || !calendarBox) {
+        console.error("calendarGrid or calendarBox not found!");
+        return;
+    }
+
+    buildCalendarGrid(grid);       // Build 7×24 grid
+    enableCellClick(grid);         // Attach popup click listeners after cells exist
+
+    const events = await fetchEvents();
+    drawCalendar(events);          // Draw existing events
+});
+
+async function fetchEvents() {
+    try {
+        const res = await fetch("/api/events");
+        if (!res.ok) throw new Error("Failed to fetch events");
+        return await res.json();
+    } catch (err) {
+        console.error(err);
+        return [];
+    }
+}
+
+function buildCalendarGrid(grid) {
+    grid.innerHTML = "";
+    grid.style.position = "relative";
+
+    for (let day = 0; day < 7; day++) {
+        for (let hour = 0; hour < 24; hour++) {
+            const cell = document.createElement("div");
+            cell.className = "hour-cell";
+            cell.dataset.day = day;
+            cell.dataset.hour = hour;
+            grid.appendChild(cell);
+        }
+    }
+}
+
+function enableCellClick(grid) {
+    const popup = document.getElementById("eventPopup");
+    const popupInput = document.getElementById("popupEventName");
+    const saveBtn = document.getElementById("popupSaveBtn");
+    const cancelBtn = document.getElementById("popupCancelBtn");
+
+    let currentCell = null;
+
+    grid.querySelectorAll(".hour-cell").forEach(cell => {
+        cell.style.cursor = "pointer";
+        cell.addEventListener("click", (e) => {
+            e.stopPropagation();
+            currentCell = cell;
+
+            const rect = cell.getBoundingClientRect();
+            popup.style.top = `${rect.bottom + window.scrollY}px`;
+            popup.style.left = `${rect.left + window.scrollX}px`;
+            popupInput.value = "";
+            popup.style.display = "block";
+            popupInput.focus();
+        });
+    });
+
+    saveBtn.addEventListener("click", async () => {
+        const eventName = popupInput.value.trim();
+        if (!eventName || !currentCell) {
+            popup.style.display = "none";
+            return;
+        }
+
+        const now = new Date();
+        const dayOffset = Number(currentCell.dataset.day);
+        const hour = Number(currentCell.dataset.hour);
+
+        const start = new Date(now);
+        start.setDate(start.getDate() - start.getDay() + dayOffset);
+        start.setHours(hour, 0, 0, 0);
+
+        const end = new Date(start);
+        end.setHours(end.getHours() + 1);
+
+        const newEvent = {
+            eventName,
+            startDate: start.toISOString().split('T')[0],
+            endDate: end.toISOString().split('T')[0],
+            startTime: start.toTimeString().slice(0,5),
+            endTime: end.toTimeString().slice(0,5),
+            privacy: "public",
+            repeat: "none",
+            friends: [],
+            eventDates: [{ start: start.toLocaleString(), end: end.toLocaleString() }]
+        };
+
+        try {
+            await createEvent(sessionStorage.getItem("username"), newEvent);
+            const updatedEvents = await fetchEvents();
+            drawCalendar(updatedEvents);
+        } catch (err) {
+            console.error(err);
+            alert("Failed to save event.");
+        } finally {
+            popup.style.display = "none";
+        }
+    });
+
+    cancelBtn.addEventListener("click", () => {
+        popup.style.display = "none";
+    });
+
+    document.addEventListener("click", (e) => {
+        if (!popup.contains(e.target) && e.target !== currentCell) {
+            popup.style.display = "none";
+        }
+    });
+}
+
+function drawCalendar(events) {
+    const grid = document.getElementById("calendarGrid");
+    const calendarBox = document.getElementById("calendarBox");
+    if (!grid || !calendarBox) return;
+
+    calendarBox.innerHTML = "";
+
+    const gridRect = grid.getBoundingClientRect();
+    const cellWidth = gridRect.width / 7;
+    const cellHeight = gridRect.height / 24;
+
+    events.forEach(event => {
+        event.eventDates.forEach(date => {
+            const start = new Date(date.start);
+            const end = new Date(date.end);
+
+            const day = start.getDay();
+            const startHour = start.getHours() + start.getMinutes() / 60;
+            const endHour = end.getHours() + end.getMinutes() / 60;
+            const duration = endHour - startHour;
+
+            const block = document.createElement("div");
+            block.className = "event-block";
+            block.textContent = event.eventName;
+            block.style.position = "absolute";
+            block.style.top = `${startHour * cellHeight}px`;
+            block.style.left = `${day * cellWidth}px`;
+            block.style.width = `${cellWidth - 2}px`;
+            block.style.height = `${duration * cellHeight}px`;
+            block.style.backgroundColor = "#6fc3ff";
+            block.style.border = "1px solid #333";
+            block.style.boxSizing = "border-box";
+            block.style.padding = "2px";
+            block.style.overflow = "hidden";
+            block.style.cursor = "pointer";
+
+            block.dataset.id = event.id;
+
+            block.addEventListener("click", async (e) => {
+                e.stopPropagation();
+                const newName = prompt("Edit event name:", event.eventName);
+                if (newName === null) return;
+
+                const updatedEvent = { ...event, eventName: newName };
+                try {
+                    const res = await fetch(`/api/events/${event.id}`, {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(updatedEvent)
+                    });
+                    if (!res.ok) throw new Error("Failed to update event");
+
+                    const updatedEvents = await fetchEvents();
+                    drawCalendar(updatedEvents);
+                } catch (err) {
+                    console.error(err);
+                    alert("Failed to update event.");
+                }
+            });
+
+            block.addEventListener("contextmenu", async (e) => {
+                e.preventDefault();
+                if (!confirm("Delete this event?")) return;
+
+                try {
+                    const res = await fetch(`/api/events/${event.id}`, { method: "DELETE" });
+                    if (!res.ok) throw new Error("Failed to delete event");
+
+                    const updatedEvents = await fetchEvents();
+                    drawCalendar(updatedEvents);
+                } catch (err) {
+                    console.error(err);
+                    alert("Failed to delete event.");
+                }
+            });
+
+            calendarBox.appendChild(block);
+        });
+    });
+}
+
+document.addEventListener("DOMContentLoaded", (event) =>{
+  setupSignInPopup();
+  setupAddCategoryPopup();
+  setupAllFilterCheckboxes();
+  setupFriendsDropdown();
+  
+  const toggleButton = document.getElementById("toggle-today-btn");
+  const todaySection = document.querySelector(".right-section");
+
+  if (toggleButton && todaySection) {
+      toggleButton.addEventListener("click", () => {
+          todaySection.style.display =
+              todaySection.style.display === "none" ? "flex" : "none";
+      });
+  }
+})

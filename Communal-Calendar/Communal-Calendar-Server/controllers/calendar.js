@@ -2,6 +2,10 @@
 const fs = require("fs");
 const path = require("path");
 
+const { loadJson, saveJson, createUserFolder } = require("../utils/fileUtils");
+
+const USERS_FILE = path.join(__dirname, "..", "users", "users.json");   //goes up to main directory and back down into users
+
 // Build a path to a user's events file
 function getEventsFilePath(username) {
   return path.join(__dirname, "..", "users", username, "events.json");
@@ -52,6 +56,22 @@ console.log(1);
   return JSON.parse(data);
 }
 
+function rsvpUsers(newEvent, username){
+  console.log(newEvent);
+  for( friend of newEvent.friends ){
+    console.log(friend[0]);
+    let rsvppath = path.join(__dirname, "..", "users", friend[0], "rsvp.json");
+    console.log(rsvppath);
+    let rsvps = loadJson(rsvppath);
+    let newrsvp = {"username": username, "event": newEvent, };
+    rsvps.push(newrsvp);
+    console.log("NEW RSVP", newrsvp);
+    console.log("FINAL RSVP", rsvps);
+    saveJson(rsvppath, rsvps);
+  }
+
+}
+
 // Save events for a given user
 function saveEvents(username, events) {
   const filePath = getEventsFilePath(username);
@@ -60,7 +80,12 @@ function saveEvents(username, events) {
 
 // Append a new event for a given user
 function addEvent(username, newEvent) {
-  const events = loadEvents(username);
+  console.log("GASFVSDUVF")
+  for(let friend in newEvent.friends){
+    newEvent.friends[friend] = [ newEvent.friends[friend], "no response" ]
+  }
+  rsvpUsers(newEvent, username);
+  let events = loadEvents(username);
   events.push(newEvent);
   saveEvents(username, events);
   return newEvent;
