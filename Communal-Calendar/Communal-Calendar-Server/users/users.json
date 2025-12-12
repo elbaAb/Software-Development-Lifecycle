@@ -8,5 +8,10 @@
     "username": "demo2",
     "password": "$2b$12$J3OO/TI90hVzmstPJp7iRO7MIzxYakAQvcKVbBcpD.x5Z/CvKjB6W",
     "email": "email@email.comm"
+  },
+  {
+    "username": "elba",
+    "password": "$2b$12$3f.PSSFkl8nMEkdnrEF9Ae9NSjUaH.PKCMLAnq/Zp5rjJXCrEj09y",
+    "email": "123abc"
   }
 ]
