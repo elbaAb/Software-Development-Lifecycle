@@ -62,6 +62,10 @@ async function formSubmit(event) {
   await createEvent(sessionStorage.getItem("username"), NewEvent);
 }
 
+function setupCalendarUI() {
+    buildCalendarGrid();
+    enableCellClick();
+}
 
 function setupFilterCheckbox(checkbox, categoryName) {
   if (!checkbox) return;
@@ -360,7 +364,8 @@ document.addEventListener("DOMContentLoaded", async (event) =>{
   setupAddCategoryPopup();
   setupAllFilterCheckboxes();
   setupProfilePictureHandlers();  // Set up profile picture change and sign out handlers
-  
+  setupCalendarUI();
+
   // Check for saved user session when app starts
   await checkSavedUserOnStart();
 })
@@ -524,6 +529,8 @@ async function checkSavedUserOnStart() {
       // Load user's calendar data
       LoadUserData();
       
+      loadUserCalendar();
+
       return true;
     } else {
       console.log("No saved user session found");
@@ -896,35 +903,54 @@ try{
     console.log("failed to remove friend: ", err)
   }
 }
-document.addEventListener("DOMContentLoaded", async () => {
-    const grid = document.getElementById("calendarGrid");
-    const calendarBox = document.getElementById("calendarBox");
 
-    if (!grid || !calendarBox) {
-        console.error("calendarGrid or calendarBox not found!");
-        return;
-    }
 
-    buildCalendarGrid(grid);       // Build 7×24 grid
-    enableCellClick(grid);         // Attach popup click listeners after cells exist
 
-    const events = await fetchEvents();
-    drawCalendar(events);          // Draw existing events
-});
-
-async function fetchEvents() {
+async function fetchEvents(username) {
     try {
-        const res = await fetch("/api/events");
-        if (!res.ok) throw new Error("Failed to fetch events");
-        return await res.json();
+        const res = await fetch(
+            `http://localhost:3000/calendar/events/${username}`
+        );
+
+        if (!res.ok) {
+            throw new Error("Failed to fetch events");
+        }
+
+        const events = await res.json();
+        console.log("Fetched events:", events);
+        return events;
     } catch (err) {
-        console.error(err);
+        console.error("fetchEvents error:", err);
         return [];
     }
 }
 
-function buildCalendarGrid(grid) {
+async function loadUserCalendar() {
+    const username = sessionStorage.getItem("username");
+
+    if (!username) {
+        console.warn("Calendar load skipped — no username");
+        return;
+    }
+
+    const events = await fetchEvents(username);
+    drawCalendar(events);
+}
+
+function buildCalendarGrid() {
+    const grid = document.getElementById("calendarGrid");
+    if (!grid) return;
+
+    let calendarBox = grid.querySelector("#calendarBox");
+
     grid.innerHTML = "";
+
+    if (!calendarBox) {
+        calendarBox = document.createElement("div");
+        calendarBox.id = "calendarBox";
+    }
+    grid.appendChild(calendarBox);
+
     grid.style.position = "relative";
 
     for (let day = 0; day < 7; day++) {
@@ -938,7 +964,8 @@ function buildCalendarGrid(grid) {
     }
 }
 
-function enableCellClick(grid) {
+function enableCellClick() {
+    const grid = document.getElementById("calendarGrid");
     const popup = document.getElementById("eventPopup");
     const popupInput = document.getElementById("popupEventName");
     const saveBtn = document.getElementById("popupSaveBtn");
@@ -953,8 +980,8 @@ function enableCellClick(grid) {
             currentCell = cell;
 
             const rect = cell.getBoundingClientRect();
-            popup.style.top = `${rect.bottom + window.scrollY}px`;
-            popup.style.left = `${rect.left + window.scrollX}px`;
+            popup.style.top = `${rect.bottom}px`;
+            popup.style.left = `${rect.left}px`;
             popupInput.value = "";
             popup.style.display = "block";
             popupInput.focus();
@@ -969,6 +996,7 @@ function enableCellClick(grid) {
         }
 
         const now = new Date();
+
         const dayOffset = Number(currentCell.dataset.day);
         const hour = Number(currentCell.dataset.hour);
 
@@ -981,133 +1009,114 @@ function enableCellClick(grid) {
 
         const newEvent = {
             eventName,
-            startDate: start.toISOString().split('T')[0],
-            endDate: end.toISOString().split('T')[0],
-            startTime: start.toTimeString().slice(0,5),
-            endTime: end.toTimeString().slice(0,5),
+            startDate: start.toISOString().split("T")[0],
+            endDate: end.toISOString().split("T")[0],
+            startTime: start.toTimeString().slice(0, 5),
+            endTime: end.toTimeString().slice(0, 5),
             privacy: "public",
             repeat: "none",
             friends: [],
-            eventDates: [{ start: start.toLocaleString(), end: end.toLocaleString() }]
+            eventDates: [
+                {
+                    start: start.toLocaleString(),
+                    end: end.toLocaleString()
+                }
+            ]
         };
 
         try {
             await createEvent(sessionStorage.getItem("username"), newEvent);
-            const updatedEvents = await fetchEvents();
+            const username = sessionStorage.getItem("username");
+            const updatedEvents = await fetchEvents(username);
             drawCalendar(updatedEvents);
         } catch (err) {
-            console.error(err);
-            alert("Failed to save event.");
-        } finally {
-            popup.style.display = "none";
+            console.error("Save event error:", err);
         }
-    });
 
-    cancelBtn.addEventListener("click", () => {
         popup.style.display = "none";
     });
 
-    document.addEventListener("click", (e) => {
-        if (!popup.contains(e.target) && e.target !== currentCell) {
-            popup.style.display = "none";
-        }
-    });
+    cancelBtn.addEventListener("click", () => (popup.style.display = "none"));
 }
 
 function drawCalendar(events) {
+    console.log("drawCalendar() called");
+    console.log("Received events:", JSON.stringify(events, null, 2));
+
     const grid = document.getElementById("calendarGrid");
     const calendarBox = document.getElementById("calendarBox");
-    if (!grid || !calendarBox) return;
+
+    if (!grid || !calendarBox) {
+        console.warn("grid or calendarBox missing");
+        return;
+    }
 
     calendarBox.innerHTML = "";
 
     const gridRect = grid.getBoundingClientRect();
+    console.log("GridRect:", gridRect);
+
     const cellWidth = gridRect.width / 7;
-    const cellHeight = gridRect.height / 24;
+
+    const sampleCell = grid.querySelector(".hour-cell");
+    if (!sampleCell) return;
+
+    const cellRect = sampleCell.getBoundingClientRect();
+    const cellHeight = cellRect.height;
+
+    //CRITICAL FIX: offset to the first hour row
+    const firstCellTop =
+        cellRect.top - gridRect.top;
+
+    console.log("Cell width:", cellWidth, "Cell height:", cellHeight);
+    console.log("First cell top offset:", firstCellTop);
 
     events.forEach(event => {
+        console.log("---- EVENT:", event.eventName);
+
         event.eventDates.forEach(date => {
+            console.log("Raw date object:", date);
+
             const start = new Date(date.start);
             const end = new Date(date.end);
 
-            const day = start.getDay();
+            console.log("Parsed start:", start);
+            console.log("Parsed end:", end);
+
+            if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+                console.error("INVALID DATE:", date.start, date.end);
+                return;
+            }
+
+            // Monday = 0, Sunday = 6
+            const day = (start.getDay() + 6) % 7;
+
             const startHour = start.getHours() + start.getMinutes() / 60;
             const endHour = end.getHours() + end.getMinutes() / 60;
             const duration = endHour - startHour;
 
+            console.log(
+                "Day:", day,
+                "StartHour:", startHour,
+                "EndHour:", endHour,
+                "Duration:", duration
+            );
+
             const block = document.createElement("div");
             block.className = "event-block";
             block.textContent = event.eventName;
-            block.style.position = "absolute";
-            block.style.top = `${startHour * cellHeight}px`;
+
             block.style.left = `${day * cellWidth}px`;
-            block.style.width = `${cellWidth - 2}px`;
+            block.style.top = `${firstCellTop + startHour * cellHeight}px`; // ✅ FIX
+            block.style.width = `${cellWidth}px`;
             block.style.height = `${duration * cellHeight}px`;
-            block.style.backgroundColor = "#6fc3ff";
-            block.style.border = "1px solid #333";
-            block.style.boxSizing = "border-box";
-            block.style.padding = "2px";
-            block.style.overflow = "hidden";
-            block.style.cursor = "pointer";
 
-            block.dataset.id = event.id;
-
-            block.addEventListener("click", async (e) => {
-                e.stopPropagation();
-                const newName = prompt("Edit event name:", event.eventName);
-                if (newName === null) return;
-
-                const updatedEvent = { ...event, eventName: newName };
-                try {
-                    const res = await fetch(`/api/events/${event.id}`, {
-                        method: "PUT",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(updatedEvent)
-                    });
-                    if (!res.ok) throw new Error("Failed to update event");
-
-                    const updatedEvents = await fetchEvents();
-                    drawCalendar(updatedEvents);
-                } catch (err) {
-                    console.error(err);
-                    alert("Failed to update event.");
-                }
-            });
-
-            block.addEventListener("contextmenu", async (e) => {
-                e.preventDefault();
-                if (!confirm("Delete this event?")) return;
-
-                try {
-                    const res = await fetch(`/api/events/${event.id}`, { method: "DELETE" });
-                    if (!res.ok) throw new Error("Failed to delete event");
-
-                    const updatedEvents = await fetchEvents();
-                    drawCalendar(updatedEvents);
-                } catch (err) {
-                    console.error(err);
-                    alert("Failed to delete event.");
-                }
-            });
+            console.log("Appending block:", block);
 
             calendarBox.appendChild(block);
         });
     });
+
+    console.log("Finished rendering events.");
 }
 
-document.addEventListener("DOMContentLoaded", (event) =>{
-  setupSignInPopup();
-  setupAddCategoryPopup();
-  setupAllFilterCheckboxes();
-  setupFriendsDropdown();
-  
-  const toggleButton = document.getElementById("toggle-today-btn");
-  const todaySection = document.querySelector(".right-section");
-
-  if (toggleButton && todaySection) {
-      toggleButton.addEventListener("click", () => {
-          todaySection.style.display =
-              todaySection.style.display === "none" ? "flex" : "none";
-      });
-  }
-})
