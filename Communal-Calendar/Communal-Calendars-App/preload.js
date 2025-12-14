@@ -25,6 +25,5 @@ contextBridge.exposeInMainWorld("electronAPI", {    //exposes certain api featur
   clearUserSession: () => ipcRenderer.invoke("clear-user-session"),
   selectProfilePicture: () => ipcRenderer.invoke("select-profile-picture"),
   saveProfilePicture: (imageData) => ipcRenderer.invoke("save-profile-picture", imageData),
-  loadProfilePicture: () => ipcRenderer.invoke("load-profile-picture"),
-  compareCalendars: (me, them, accessToken) => ipcRenderer.invoke("compare-calendars", { me, them, accessToken }),
+  loadProfilePicture: () => ipcRenderer.invoke("load-profile-picture")
 })

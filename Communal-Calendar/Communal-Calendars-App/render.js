@@ -808,9 +808,37 @@ async function getFriends(username, accessToken) {
   }
 }
 
-function toggleFriendEvents(e){
+// Toggle Friend Calendar Overlay
+async function toggleFriendEvents(e) {
+  const cb = e.currentTarget;
+  const friendName = cb.getAttribute("friend");
+  if (!friendName) return;
 
+  const show = cb.checked;
+
+  // Keep BOTH clones (dropdown + RSVP section) in sync
+  document
+    .querySelectorAll(`input[type="checkbox"][friend="${friendName}"]`)
+    .forEach(x => (x.checked = show));
+
+  // If turned OFF: remove that friend's blocks and stop
+  if (!show) {
+    document
+      .querySelectorAll(`.event-block.friend-event[data-friend="${friendName}"]`)
+      .forEach(el => el.remove());
+    return;
+  }
+
+  // Turned ON: fetch friend's events and draw them
+  try {
+    const friendEvents = await fetchEvents(friendName);
+    drawFriendCalendar(friendName, friendEvents);
+  } catch (err) {
+    console.error("Failed to load friend's events:", friendName, err);
+  }
 }
+
+
 
 async function requestFriend(e) {
   try{
@@ -1123,6 +1151,54 @@ function drawCalendar(events) {
     console.log("Finished rendering events.");
 }
 
+function drawFriendCalendar(friendName, events) {
+  const grid = document.getElementById("calendarGrid");
+  const calendarBox = document.getElementById("calendarBox");
+  if (!grid || !calendarBox) return;
+
+  // remove old blocks for this friend
+  document
+    .querySelectorAll(`.event-block.friend-event[data-friend="${friendName}"]`)
+    .forEach(el => el.remove());
+
+  const gridRect = grid.getBoundingClientRect();
+  const cellWidth = gridRect.width / 7;
+
+  const sampleCell = grid.querySelector(".hour-cell");
+  if (!sampleCell) return;
+
+  const cellRect = sampleCell.getBoundingClientRect();
+  const cellHeight = cellRect.height;
+  const firstCellTop = cellRect.top - gridRect.top;
+
+  (events || []).forEach(event => {
+    (event.eventDates || []).forEach(date => {
+      const start = new Date(date.start);
+      const end = new Date(date.end);
+      if (isNaN(start) || isNaN(end)) return;
+
+      const day = (start.getDay() + 6) % 7;
+      const startHour = start.getHours() + start.getMinutes() / 60;
+      const endHour = end.getHours() + end.getMinutes() / 60;
+      const duration = endHour - startHour;
+      if (duration <= 0) return;
+
+      const block = document.createElement("div");
+      block.className = "event-block friend-event";
+      block.dataset.friend = friendName;
+      block.textContent = `${event.eventName || "(Event)"} (${friendName})`;
+
+      block.style.left = `${day * cellWidth}px`;
+      block.style.top = `${firstCellTop + startHour * cellHeight}px`;
+      block.style.width = `${cellWidth}px`;
+      block.style.height = `${duration * cellHeight}px`;
+      block.style.opacity = "0.7";
+
+      calendarBox.appendChild(block);
+    });
+  });
+}
+
 // ==============================
 // Toggle "Next Event Today" pane
 // ==============================
@@ -1141,7 +1217,7 @@ document.addEventListener("DOMContentLoaded", () => {
     visible = !visible;
 
     rightSection.style.display = visible ? "flex" : "none";
-    toggleBtn.textContent = visible ? "Hide Today" : "Show Today";
+    toggleBtn.textContent = visible ? "Hide Search" : "Show Search";
   });
 });
 
@@ -1169,8 +1245,7 @@ document.addEventListener("DOMContentLoaded", () => {
         name.includes(query) ||
         startDate.includes(query) ||
         startTime.includes(query) ||
-        endTime.includes(query) ||
-        location.includes(query)
+        endTime.includes(query) 
       );
     });
 
@@ -1192,72 +1267,3 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 });
-
-// Sets up the "Compare Calendar" button in the nav bar.
-function setupCompareCalendarButton() {
-
-  // Grab the Compare button from the DOM
-  const btn = document.getElementById("compare-calendar-btn");
-
-  // Safety check: button not found = do nothing
-  if (!btn) {
-    console.warn("Compare calendar button not found");
-    return;
-  }
-
-  // Attach click listener
-  btn.addEventListener("click", async () => {
-
-    // Ask user who they want to compare calendars with
-    const otherUsername = prompt("Compare calendar with who?");
-
-    if (!otherUsername) return;
-
-    // Get logged-in user's info
-    const username = sessionStorage.getItem("username");
-    const accessToken = sessionStorage.getItem("accessToken");
-
-    // Must be logged in
-    if (!username || !accessToken) {
-      alert("You must be logged in to compare calendars.");
-      return;
-    }
-
-    try {
-      // Call Electron IPC to compare calendars
-      const result = await window.electronAPI.compareCalendars(
-        username,
-        otherUsername,
-        accessToken
-      );
-
-      // No conflicts found
-      if (!result.conflicts || result.conflicts.length === 0) {
-        alert(`No conflicts with ${otherUsername}.`);
-        return;
-      }
-
-      // Build readable output for conflicts
-      const text = result.conflicts
-        .map(c =>
-          `YOU: ${c.me.eventName}
-${new Date(c.me.start).toLocaleString()} – ${new Date(c.me.end).toLocaleString()}
-
-THEM: ${c.them.eventName}
-${new Date(c.them.start).toLocaleString()} – ${new Date(c.them.end).toLocaleString()}
-
-OVERLAP:
-${new Date(c.overlap.start).toLocaleString()} – ${new Date(c.overlap.end).toLocaleString()}
-`
-        )
-        .join("\n------------------------\n");
-
-      // Display conflicts
-      alert(text);
-
-    } catch (err) {
-      console.error("Compare failed:", err);
-      alert("Failed to compare calendars.");
-    }
-  });
-}
