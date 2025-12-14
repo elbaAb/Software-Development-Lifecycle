@@ -1081,6 +1081,67 @@ function enableCellClick() {
   document.getElementById("popupSaveBtn")
     .addEventListener("click", () => savePopupEvent(clickedDate));
 }
+const popupFriendsBtn = document.getElementById("popupFriendsBtn");
+const friendsPicker = document.getElementById("popupFriendsPicker");
+const friendsList = document.getElementById("popupFriendsList");
+const friendsDoneBtn = document.getElementById("popupFriendsDone");
+const friendsSummary = document.getElementById("popupFriendsSummary");
+
+let selectedPopupFriends = [];
+
+
+popupFriendsBtn.addEventListener("click", () => {
+  friendsList.innerHTML = "";
+
+  const friends =
+    JSON.parse(sessionStorage.getItem("friends")) || [];
+
+  if (friends.length === 0) {
+    friendsList.textContent = "No friends found.";
+  } else {
+    friends.forEach(f => {
+      const label = document.createElement("label");
+      label.style.display = "flex";
+      label.style.alignItems = "center";
+      label.style.gap = "6px";
+
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.value = f.username;
+      checkbox.checked = selectedPopupFriends.includes(f.username);
+
+      checkbox.addEventListener("change", () => {
+        if (checkbox.checked) {
+          selectedPopupFriends.push(f.username);
+        } else {
+          selectedPopupFriends = selectedPopupFriends.filter(
+            name => name !== f.username
+          );
+        }
+      });
+
+      label.appendChild(checkbox);
+      label.appendChild(document.createTextNode(f.username));
+      friendsList.appendChild(label);
+    });
+  }
+
+  const mainPopup = document.getElementById("eventPopup");
+  const rect = mainPopup.getBoundingClientRect();
+
+  friendsPicker.style.top = `${rect.bottom + 4}px`;
+  friendsPicker.style.left = `${rect.left}px`;
+  friendsPicker.style.display = "block";
+});
+
+friendsDoneBtn.addEventListener("click", () => {
+  friendsPicker.style.display = "none";
+
+  friendsSummary.textContent =
+    selectedPopupFriends.length
+      ? selectedPopupFriends.join(", ")
+      : "(none)";
+});
 
 async function savePopupEvent(baseDate) {
   const eventName = document.getElementById("popupEventName").value.trim();
@@ -1089,11 +1150,16 @@ async function savePopupEvent(baseDate) {
   const startTime = document.getElementById("popupStartTime").value;
   const endTime = document.getElementById("popupEndTime").value;
   const repeat = document.getElementById("popupRepeat").value;
+
   const privacy =
     document.querySelector('input[name="popupPrivacy"]:checked')?.value;
 
   const travelTime =
     parseInt(document.getElementById("popupTravelTime").value || "0", 10);
+
+const friends = Array.from(
+  document.querySelectorAll('#popupFriendsList input[type="checkbox"]:checked')
+).map(cb => cb.getAttribute("friend") || cb.value);
 
   const [sh, sm] = startTime.split(":").map(Number);
   const [eh, em] = endTime.split(":").map(Number);
@@ -1116,7 +1182,7 @@ async function savePopupEvent(baseDate) {
     endTime,
     privacy,
     repeat,
-    friends: [],
+    friends,
     eventDates: [
       {
         start: start.toLocaleString(),

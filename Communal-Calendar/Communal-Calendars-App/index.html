@@ -306,14 +306,29 @@ content="
     </select>
 
     <label>Privacy</label>
-    <div>
-      <label><input type="radio" name="popupPrivacy" value="public" checked> Public</label>
-      <label><input type="radio" name="popupPrivacy" value="friends"> Friends</label>
-      <label><input type="radio" name="popupPrivacy" value="private"> Private</label>
+    <div class="popup-radio-group">
+      <label>
+        <input type="radio" name="popupPrivacy" value="public" checked />
+        Public
+      </label>
+      <label>
+        <input type="radio" name="popupPrivacy" value="friends" />
+        Friends
+      </label>
+      <label>
+        <input type="radio" name="popupPrivacy" value="private" />
+        Private
+      </label>
     </div>
 
     <label>Travel Time (minutes)</label>
     <input id="popupTravelTime" type="number" value="0" min="0" />
+
+    <label>Friends</label>
+    <div class="popup-row">
+      <button id="popupFriendsBtn" type="button">Invite Friends</button>
+      <span id="popupFriendsSummary">(none)</span>
+    </div>
 
     <div class="event-popup-buttons">
       <button id="popupSaveBtn">Save</button>
@@ -322,8 +337,16 @@ content="
 
   </div>
 </div>
+
+<div id="popupFriendsPicker" class="friends-picker" style="display:none;">
+  <div class="friends-picker-header">Invite Friends</div>
+
+  <div id="popupFriendsList"></div>
+
+  <div class="friends-picker-buttons">
+    <button id="popupFriendsDone">Done</button>
   </div>
-    </div>
+</div>
 </div>
 </body>
 </html>
