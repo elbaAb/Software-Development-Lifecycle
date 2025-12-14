@@ -985,72 +985,102 @@ function buildCalendarGrid() {
     for (let day = 0; day < 7; day++) {
       const cell = document.createElement("div");
       cell.className = "hour-cell";
-      cell.dataset.day = day;     // column
-      cell.dataset.hour = hour;   // row
+      cell.dataset.day = day;     
+      cell.dataset.hour = hour;   
       grid.appendChild(cell);
     }}
     
 }
 
 function enableCellClick() {
-    const grid = document.getElementById("calendarGrid");
-    const popup = document.getElementById("eventPopup");
-    const popupInput = document.getElementById("popupEventName");
-    const saveBtn = document.getElementById("popupSaveBtn");
-    const cancelBtn = document.getElementById("popupCancelBtn");
+  const grid = document.getElementById("calendarGrid");
+  const popup = document.getElementById("eventPopup");
 
-    let currentCell = null;
+  let clickedDate = null;
 
-    grid.querySelectorAll(".hour-cell").forEach(cell => {
-        cell.style.cursor = "pointer";
-        cell.addEventListener("click", (e) => {
-            e.stopPropagation();
-            currentCell = cell;
+  grid.querySelectorAll(".hour-cell").forEach(cell => {
+    cell.addEventListener("click", e => {
+      e.stopPropagation();
 
-            const rect = cell.getBoundingClientRect();
-            popup.style.top = `${rect.bottom}px`;
-            popup.style.left = `${rect.left}px`;
-            popupInput.value = "";
-            popup.style.display = "block";
-            popupInput.focus();
-        });
+      const day = Number(cell.dataset.day);
+      const hour = Number(cell.dataset.hour);
+
+      const now = new Date();
+      const mondayIndex = (now.getDay() + 6) % 7;
+      const weekStart = new Date(now);
+      weekStart.setDate(now.getDate() - mondayIndex);
+      weekStart.setHours(0, 0, 0, 0);
+
+      const start = new Date(weekStart);
+      start.setDate(weekStart.getDate() + day);
+      start.setHours(hour, 0, 0, 0);
+
+      clickedDate = start;
+
+      document.getElementById("popupEventName").value = "";
+      document.getElementById("popupStartDate").value = start.toISOString().split("T")[0];
+      document.getElementById("popupStartTime").value = start.toTimeString().slice(0, 5);
+
+      const end = new Date(start);
+      end.setHours(end.getHours() + 1);
+      document.getElementById("popupEndTime").value = end.toTimeString().slice(0, 5);
+
+      const rect = cell.getBoundingClientRect();
+      popup.style.top = `${rect.bottom}px`;
+      popup.style.left = `${rect.left}px`;
+
+      popup.style.display = "block";
     });
+  });
 
-    saveBtn.addEventListener("click", async () => {
-  const eventName = popupInput.value.trim();
-  if (!eventName || !currentCell) {
-    popup.style.display = "none";
-    return;
-  }
+  document.getElementById("popupCancelBtn")
+    .addEventListener("click", () => popup.style.display = "none");
 
-  const dayOffset = Number(currentCell.dataset.day); 
-  const hour = Number(currentCell.dataset.hour);
+  document.getElementById("popupSaveBtn")
+    .addEventListener("click", () => savePopupEvent(clickedDate));
+}
 
-  // ✅ Monday-based start of week (matches your drawCalendar day mapping)
-  const now = new Date();
-  const mondayIndex = (now.getDay() + 6) % 7; // Sun(0)->6, Mon(1)->0, ...
-  const weekStart = new Date(now);
-  weekStart.setHours(0, 0, 0, 0);
-  weekStart.setDate(now.getDate() - mondayIndex);
+async function savePopupEvent(baseDate) {
+  const eventName = document.getElementById("popupEventName").value.trim();
+  if (!eventName || !baseDate) return;
 
-  // Build start/end based on clicked cell
-  const start = new Date(weekStart);
-  start.setDate(weekStart.getDate() + dayOffset);
-  start.setHours(hour, 0, 0, 0);
+  const startTime = document.getElementById("popupStartTime").value;
+  const endTime = document.getElementById("popupEndTime").value;
+  const repeat = document.getElementById("popupRepeat").value;
+  const privacy =
+    document.querySelector('input[name="popupPrivacy"]:checked')?.value;
 
-  const end = new Date(start);
-  end.setHours(end.getHours() + 1);
+  const travelTime =
+    parseInt(document.getElementById("popupTravelTime").value || "0", 10);
+
+  const [sh, sm] = startTime.split(":").map(Number);
+  const [eh, em] = endTime.split(":").map(Number);
+
+  const start = new Date(baseDate);
+  start.setHours(sh, sm, 0, 0);
+  start.setMinutes(start.getMinutes() - travelTime);
+
+  const end = new Date(baseDate);
+  end.setHours(eh, em, 0, 0);
+  end.setMinutes(end.getMinutes() + travelTime);
+
+  const isoDate = start.toISOString().split("T")[0];
 
   const newEvent = {
     eventName,
-    startDate: start.toISOString().split("T")[0],
-    endDate: end.toISOString().split("T")[0],
-    startTime: start.toTimeString().slice(0, 5),
-    endTime: end.toTimeString().slice(0, 5),
-    privacy: "public",
-    repeat: "none",
+    startDate: isoDate,
+    endDate: isoDate,
+    startTime,
+    endTime,
+    privacy,
+    repeat,
     friends: [],
-    eventDates: [{ start: start.toLocaleString(), end: end.toLocaleString() }]
+    eventDates: [
+      {
+        start: start.toLocaleString(),
+        end: end.toLocaleString()
+      }
+    ]
   };
 
   try {
@@ -1060,14 +1090,11 @@ function enableCellClick() {
     const updatedEvents = await fetchEvents(username);
     drawCalendar(updatedEvents);
   } catch (err) {
-    console.error("Save event error:", err);
-    alert("Failed to save event.");
+    console.error("Event save failed:", err);
+    alert("Failed to create event.");
   } finally {
-    popup.style.display = "none";
+    document.getElementById("eventPopup").style.display = "none";
   }
-});
-
-    cancelBtn.addEventListener("click", () => (popup.style.display = "none"));
 }
 
 function drawCalendar(events) {
@@ -1095,7 +1122,6 @@ function drawCalendar(events) {
     const cellRect = sampleCell.getBoundingClientRect();
     const cellHeight = cellRect.height;
 
-    //CRITICAL FIX: offset to the first hour row
     const firstCellTop =
         cellRect.top - gridRect.top;
 
@@ -1119,7 +1145,6 @@ function drawCalendar(events) {
                 return;
             }
 
-            // Monday = 0, Sunday = 6
             const day = (start.getDay() + 6) % 7;
 
             const startHour = start.getHours() + start.getMinutes() / 60;
@@ -1138,7 +1163,7 @@ function drawCalendar(events) {
             block.textContent = event.eventName;
 
             block.style.left = `${day * cellWidth}px`;
-            block.style.top = `${firstCellTop + startHour * cellHeight}px`; // ✅ FIX
+            block.style.top = `${firstCellTop + startHour * cellHeight}px`;
             block.style.width = `${cellWidth}px`;
             block.style.height = `${duration * cellHeight}px`;
 
