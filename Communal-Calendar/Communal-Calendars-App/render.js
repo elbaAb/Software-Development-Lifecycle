@@ -989,52 +989,55 @@ function enableCellClick() {
     });
 
     saveBtn.addEventListener("click", async () => {
-        const eventName = popupInput.value.trim();
-        if (!eventName || !currentCell) {
-            popup.style.display = "none";
-            return;
-        }
+  const eventName = popupInput.value.trim();
+  if (!eventName || !currentCell) {
+    popup.style.display = "none";
+    return;
+  }
 
-        const now = new Date();
+  const dayOffset = Number(currentCell.dataset.day); // 0=Mon ... 6=Sun
+  const hour = Number(currentCell.dataset.hour);
 
-        const dayOffset = Number(currentCell.dataset.day);
-        const hour = Number(currentCell.dataset.hour);
+  // ✅ Monday-based start of week (matches your drawCalendar day mapping)
+  const now = new Date();
+  const mondayIndex = (now.getDay() + 6) % 7; // Sun(0)->6, Mon(1)->0, ...
+  const weekStart = new Date(now);
+  weekStart.setHours(0, 0, 0, 0);
+  weekStart.setDate(now.getDate() - mondayIndex);
 
-        const start = new Date(now);
-        start.setDate(start.getDate() - start.getDay() + dayOffset);
-        start.setHours(hour, 0, 0, 0);
+  // Build start/end based on clicked cell
+  const start = new Date(weekStart);
+  start.setDate(weekStart.getDate() + dayOffset);
+  start.setHours(hour, 0, 0, 0);
 
-        const end = new Date(start);
-        end.setHours(end.getHours() + 1);
+  const end = new Date(start);
+  end.setHours(end.getHours() + 1);
 
-        const newEvent = {
-            eventName,
-            startDate: start.toISOString().split("T")[0],
-            endDate: end.toISOString().split("T")[0],
-            startTime: start.toTimeString().slice(0, 5),
-            endTime: end.toTimeString().slice(0, 5),
-            privacy: "public",
-            repeat: "none",
-            friends: [],
-            eventDates: [
-                {
-                    start: start.toLocaleString(),
-                    end: end.toLocaleString()
-                }
-            ]
-        };
+  const newEvent = {
+    eventName,
+    startDate: start.toISOString().split("T")[0],
+    endDate: end.toISOString().split("T")[0],
+    startTime: start.toTimeString().slice(0, 5),
+    endTime: end.toTimeString().slice(0, 5),
+    privacy: "public",
+    repeat: "none",
+    friends: [],
+    eventDates: [{ start: start.toLocaleString(), end: end.toLocaleString() }]
+  };
 
-        try {
-            await createEvent(sessionStorage.getItem("username"), newEvent);
-            const username = sessionStorage.getItem("username");
-            const updatedEvents = await fetchEvents(username);
-            drawCalendar(updatedEvents);
-        } catch (err) {
-            console.error("Save event error:", err);
-        }
+  try {
+    const username = sessionStorage.getItem("username");
+    await createEvent(username, newEvent);
 
-        popup.style.display = "none";
-    });
+    const updatedEvents = await fetchEvents(username);
+    drawCalendar(updatedEvents);
+  } catch (err) {
+    console.error("Save event error:", err);
+    alert("Failed to save event.");
+  } finally {
+    popup.style.display = "none";
+  }
+});
 
     cancelBtn.addEventListener("click", () => (popup.style.display = "none"));
 }

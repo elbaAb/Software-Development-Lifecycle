@@ -285,7 +285,7 @@ body{
   display: grid;
   grid-template-columns: 80px 1fr;
   min-width: 1100px;
-  height: 600px; 
+  height: 500px; 
   overflow-y: auto;
   background-color: var(--backgroundColor);
   position: relative; 
