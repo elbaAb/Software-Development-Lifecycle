@@ -49,15 +49,12 @@ content="
         </div>
       </div>
       <!-- End of Filter Nav Menu -->
-
-       <div class="nav-button" id="compare-button">
-  <button id="compare-calendar-btn">Compare</button>
-</div>
       
       <!-- Friends drop down -->
       <div id="friends-dropdown"><button id="friends-dropdown-button">Friends</button> 
         <div id="friends-dropdown-content"></div> 
       </div>
+
 
       <button id="toggle-today-btn" class="nav-right-btn">Upcoming Events</button>
 </div>
@@ -272,7 +269,7 @@ content="
       <div class="right-section text-center">
         <div class="box" id="box3">
           <div class="box" id="today-box">
-            <h3>Next Event Today</h3>
+            <h3>Upcoming Event Search</h3>
             <input
               id="events-search"
               type="search"
@@ -289,13 +286,43 @@ content="
     
  <div id="eventPopup" class="event-popup-overlay">
   <div class="event-popup">
-    <input type="text" id="popupEventName" placeholder="Event name" />
+
+    <label>Event Name</label>
+    <input id="popupEventName" type="text" />
+
+    <label>Start Date</label>
+    <input id="popupStartDate" type="date" />
+
+    <label>Start Time</label>
+    <input id="popupStartTime" type="time" />
+
+    <label>End Time</label>
+    <input id="popupEndTime" type="time" />
+
+    <label>Repeat</label>
+    <select id="popupRepeat">
+      <option value="none">One-time</option>
+      <option value="weekly">Weekly</option>
+    </select>
+
+    <label>Privacy</label>
+    <div>
+      <label><input type="radio" name="popupPrivacy" value="public" checked> Public</label>
+      <label><input type="radio" name="popupPrivacy" value="friends"> Friends</label>
+      <label><input type="radio" name="popupPrivacy" value="private"> Private</label>
+    </div>
+
+    <label>Travel Time (minutes)</label>
+    <input id="popupTravelTime" type="number" value="0" min="0" />
+
     <div class="event-popup-buttons">
       <button id="popupSaveBtn">Save</button>
       <button id="popupCancelBtn">Cancel</button>
     </div>
+
   </div>
 </div>
+  </div>
     </div>
 </div>
 </body>
