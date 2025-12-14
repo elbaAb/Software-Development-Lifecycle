@@ -273,7 +273,6 @@ function setupAddCategoryPopup() {
           console.log("createCategory result:", result);
         } catch (err) {
           console.error("createCategory failed:", err);
-          alert("Could not save category to server");
           return;
         }
 
@@ -365,6 +364,7 @@ document.addEventListener("DOMContentLoaded", async (event) =>{
   setupAllFilterCheckboxes();
   setupProfilePictureHandlers();  // Set up profile picture change and sign out handlers
   setupCalendarUI();
+  setupFriendsDropdown();
 
   // Check for saved user session when app starts
   await checkSavedUserOnStart();
@@ -476,7 +476,6 @@ function setupProfilePictureHandlers() {
         }
       } catch (error) {
         console.error('Error changing profile picture:', error);
-        alert('Failed to change profile picture. Please try again.');
       }
     });
   }
@@ -490,15 +489,19 @@ function setupProfilePictureHandlers() {
         
         // Clear session storage (temporary)
         window.sessionStorage.clear();
+
+        // clear these so if you relogin it doesn't refill them
+        let content = document.getElementById("friends-dropdown-content");
+        let rsvpFriends = document.getElementById("search-friends-section");
+        content.innerHTML = "";     
+        rsvpFriends.innerHTML = "";
         
         // Update UI to show Sign In button again
         updateUserDisplay(null);
         
         console.log("Signed out successfully");
-        alert("You have been signed out.");
       } catch (error) {
         console.error('Error signing out:', error);
-        alert('Error signing out. Please try again.');
       }
     });
   }
@@ -577,7 +580,6 @@ async function loginUser(username, password) {
     return { accessToken, refreshToken };
   } catch (err) {
     console.error("Login failed:", err);
-    alert("Login failed. Please check your username and password.");
     throw err;
   }
 }
@@ -618,7 +620,6 @@ async function registerUser(email, username, password) {
     return { accessToken, refreshToken };
   } catch (err) {
     console.error("Registration failed:", err);
-    alert("Registration failed. Please try a different username or email.");
     throw err;
   }
 }
@@ -635,19 +636,18 @@ async function createEvent(username, eventData) {
   }
 }
 
-function setupFriendsDropdown(e) {
-  let friends_button = document.getElementById("friends-dropdown-button");
-  let content = document.getElementById("friends-dropdown-content");
+function setupFriendsDropdown() {
+  const friends_button = document.getElementById("friends-dropdown-button");
+  const content = document.getElementById("friends-dropdown-content");
 
+  content.style.display = "none";
   friends_button.addEventListener("click", () => {
-
     if(content.style.display == "none"){
       content.style.display = "block";
     }else {
       content.style.display = "none";
     }
   })
-
 
 }
 
@@ -670,18 +670,49 @@ async function getRSVP(username, accessToken){
       title = document.createElement("h2");
       date = document.createElement("h3");
       time = document.createElement("h3");
-      days = document.createElement("p")
+      days = document.createElement("p");
+      buttoncontainer = document.createElement("div")
+      accept = document.createElement("button");
+      decline = document.createElement("button");
 
-      title.textContent = item.eventName;
-      date.textContent = `${item.startDate} - ${item.endDate}`
-      time.textContent = `${item.startTime} - ${item.endTime}`
+      title.textContent = `${item.newEvent.eventName} From ${item.username}`
+      date.textContent = `${item.startDate} - ${item.endDate}`;
+      time.textContent = `${item.startTime} - ${item.endTime}`;
 
-      for( let day of item.event){
+      accept.textContent = "Accept";
+      deny.textContent = "Deny";
+      accept.setAttribute("response", true)
+      deny.setAttribute("response", false)
+      accept.setAttribute("event", item.newEvent.eventName)
+      deny.setAttribute("event", item.newEvent.eventName)
+      accept.addEventListener("click", respondRSVP)
+      deny.addEventListener("click", respondRSVP)
 
-      }
+      container.appendChild(title);
+      container.appendChild(date);
+      container.appendChild(time);
+      container.appendChild(days);
+
+      buttoncontainer.appendChild(accept);
+      buttoncontainer.appendChild(deny);
+
+
     }
   }
   catch(err){
+
+  }
+}
+
+async function respondRSVP(e){
+  try{
+    const accessToken = window.sessionStorage.getItem("accessToken");
+    const username = window.sessionStorage.getItem("username");
+    button = e.currentTarget;
+    stat = button.getAttribute("response");
+    events = button.getAttribute("event");
+    let response = await window.electronAPI.respondRSVP(username, stat, events, accessToken);
+  }catch(err){
 
   }
 }
@@ -699,62 +730,77 @@ async function getCategories(username, accessToken) {
 async function getFriends(username, accessToken) {
   try {
     const friends = await window.electronAPI.getFriends(username, accessToken);
-    console.log("Friends:", friends);
+
+    window.sessionStorage.setItem("friends", JSON.stringify(friends));
+
+    console.log("FRIENDS FROM SESSION STORAGE")
+    console.log(window.sessionStorage.getItem("friends"))
 
     let content = document.getElementById("friends-dropdown-content");
     let rsvpFriends = document.getElementById("search-friends-section");
 
-    content.innerHTML = "";     // clear these so if you relogin it doesn't refill them
+    content.innerHTML = "";     
     rsvpFriends.innerHTML = "";
+
+    console.log("Friends:", friends);
+
+    let favoritefriends = document.createElement("div");
+    favoritefriends.className = "Favorite";
+    let nonfavoritefriends = document.createElement("div");
+    nonfavoritefriends.className = "nonFavorite";
+    let rsvpfavoritefriends = document.createElement("div");
+    rsvpfavoritefriends.className = "Favorite";
+    let rsvpnonfavoritefriends = document.createElement("div");
+    rsvpnonfavoritefriends.className = "nonFavorite";
+    
+    content.appendChild(favoritefriends);
+    content.appendChild(nonfavoritefriends);
+    rsvpFriends.appendChild(rsvpfavoritefriends);
+    rsvpFriends.appendChild(rsvpnonfavoritefriends);
 
     const requests = await getRequests(username, accessToken);
 
-    console.log(requests);
-
-    for( let request of requests ){
-      console.log("Friend request ", request);
-
-      let container = document.createElement("div");
-      container.setAttribute("request", request.from);
-      let name = document.createElement("div");
-      name.textContent = request.from;
-      let accept = document.createElement("button");
-      accept.textContent = "Accept";
-      accept.setAttribute("friend", request.from);
-      accept.addEventListener("click", acceptFriend);
-      let decline = document.createElement("button");
-      decline.textContent = "Decline";
-      decline.setAttribute("friend", request.from);
-      decline.addEventListener("click", denyFriend);
-
-      container.appendChild(name)
-      container.appendChild(accept);
-      container.appendChild(decline);
-
-      content.appendChild(container);
-    }
-
     if (content) {
-      for (let i = 0; i < friends.length; i++) {
+      for( let request of requests ){
+        console.log("Friend request ", request);
+
+        let container = document.createElement("div");
+        container.setAttribute("request", request.from);
+        let name = document.createElement("div");
+        name.textContent = request.from;
+        let accept = document.createElement("button");
+        accept.textContent = "Accept";
+        accept.setAttribute("friend", request.from);
+        accept.addEventListener("click", acceptFriend);
+        let decline = document.createElement("button");
+        decline.textContent = "Decline";
+        decline.setAttribute("friend", request.from);
+        decline.addEventListener("click", denyFriend);
+
+        container.appendChild(name)
+        container.appendChild(accept);
+        container.appendChild(decline);
+
+        content.appendChild(container);
+      }
+
+      for (let friend of friends) {
+
         // Base container with name + checkbox
         let container = document.createElement("div");
         container.className = "Friends-Drop-Container";
-        container.setAttribute("friendParent",  friends[i].username)
+        container.setAttribute("friendParent",  friend.username)
 
         let name = document.createElement("label");
 
         let check = document.createElement("input");
         check.type = "checkbox";
         check.checked = false;
-        check.setAttribute("friend", friends[i].username);
+        check.setAttribute("friend", friend.username);
         name.appendChild(check);
 
-        name.appendChild(document.createTextNode(friends[i].username));
+        name.appendChild(document.createTextNode(friend.username));
         container.appendChild(name);
-
-        if (friends[i].favorite) {
-          container.className = "Friends-Drop-Container favoriteFriend";
-        }
 
         // Clone the base container for each section
         let rsvpClone = container.cloneNode(true);
@@ -762,12 +808,12 @@ async function getFriends(username, accessToken) {
 
         // Add buttons ONLY to the content clone
         let favorite = document.createElement("button");
-        favorite.setAttribute("friend", friends[i].username);
+        favorite.setAttribute("friend", friend.username);
         favorite.addEventListener("click", changeFavorite);
-        favorite.textContent = friends[i].favorite ? "Unfavorite" : "Favorite";
+        favorite.textContent = friend.favorite ? "Unfavorite" : "Favorite";
 
         let remove = document.createElement("button");
-        remove.setAttribute("friend", friends[i].username);
+        remove.setAttribute("friend", friend.username);
         remove.addEventListener("click", removeFriend);
         remove.textContent = "Remove";
 
@@ -775,14 +821,15 @@ async function getFriends(username, accessToken) {
         contentClone.appendChild(remove);
 
         // Append to each section
-        rsvpFriends.appendChild(rsvpClone);
-        content.appendChild(contentClone);
+        if(friend.favorite){
+          favoritefriends.appendChild(contentClone);
+          rsvpfavoritefriends.appendChild(rsvpClone);
+        }else{
+          nonfavoritefriends.appendChild(contentClone);
+          rsvpnonfavoritefriends.appendChild(rsvpClone);
+        }
 
         // Attach checkbox listener to both clones
-        let rsvpCheckbox = rsvpClone.querySelector("input[type=checkbox]");
-        if (rsvpCheckbox) {
-          rsvpCheckbox.addEventListener("change", toggleFriendEvents);
-        }
         let contentCheckbox = contentClone.querySelector("input[type=checkbox]");
         if (contentCheckbox) {
           contentCheckbox.addEventListener("change", toggleFriendEvents);
@@ -867,14 +914,9 @@ async function changeFavorite(e){
     const button = e.currentTarget;
     const friend = button.getAttribute("friend");
     const username = sessionStorage.getItem("username");
-    const result = await window.electronAPI.changeFavorite(username, friend, accessToken);
-    console.log(result)
-    if(result){
-      button.textContent = "Unfavorite"
-    }else{
-      button.textContent = "Favorite"
-    }
-    return(result);
+    await window.electronAPI.changeFavorite(username, friend, accessToken);
+    
+    getFriends(username, accessToken);
   }catch(err){
     console.log("failed to change favorite: ", err)
   }
@@ -1216,7 +1258,6 @@ function setupCompareCalendarButton() {
 
     // Must be logged in
     if (!username || !accessToken) {
-      alert("You must be logged in to compare calendars.");
       return;
     }
 
@@ -1230,7 +1271,6 @@ function setupCompareCalendarButton() {
 
       // No conflicts found
       if (!result.conflicts || result.conflicts.length === 0) {
-        alert(`No conflicts with ${otherUsername}.`);
         return;
       }
 
@@ -1250,11 +1290,9 @@ ${new Date(c.overlap.start).toLocaleString()} – ${new Date(c.overlap.end).toLo
         .join("\n------------------------\n");
 
       // Display conflicts
-      alert(text);
 
     } catch (err) {
       console.error("Compare failed:", err);
-      alert("Failed to compare calendars.");
     }
   });
 }

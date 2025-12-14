@@ -1,1 +1,10 @@
-[]
+[
+  {
+    "username": "demo2",
+    "favorite": 0
+  },
+  {
+    "username": "demo3",
+    "favorite": 0
+  }
+]
