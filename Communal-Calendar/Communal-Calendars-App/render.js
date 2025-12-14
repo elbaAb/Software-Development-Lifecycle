@@ -1120,3 +1120,141 @@ function drawCalendar(events) {
     console.log("Finished rendering events.");
 }
 
+// ==============================
+// Toggle "Next Event Today" pane
+// ==============================
+document.addEventListener("DOMContentLoaded", () => {
+  const toggleBtn = document.getElementById("toggle-today-btn");
+  const rightSection = document.querySelector(".right-section");
+
+  if (!toggleBtn || !rightSection) {
+    console.warn("Toggle Today: button or right section not found.");
+    return;
+  }
+
+  let visible = true;
+
+  toggleBtn.addEventListener("click", () => {
+    visible = !visible;
+
+    rightSection.style.display = visible ? "flex" : "none";
+    toggleBtn.textContent = visible ? "Hide Today" : "Show Today";
+  });
+});
+
+// --- Event Search Functionality ---
+document.addEventListener("DOMContentLoaded", () => {
+  const searchInput = document.getElementById("events-search");
+  const todayEventDiv = document.getElementById("today-event");
+
+  if (!searchInput || !todayEventDiv) return;
+
+  searchInput.addEventListener("input", async () => {
+    const query = searchInput.value.toLowerCase().trim();
+
+    const username = sessionStorage.getItem("username");
+    const accessToken = sessionStorage.getItem("accessToken");
+    const events = await window.electronAPI.getEvents(username, accessToken);
+
+    const filtered = (events || []).filter(ev => {
+      const name = (ev.eventName || "").toLowerCase();
+      const startDate = (ev.startDate || "").toLowerCase();
+      const startTime = (ev.startTime || "").toLowerCase();
+      const endTime = (ev.endTime || "").toLowerCase();
+
+      return (
+        name.includes(query) ||
+        startDate.includes(query) ||
+        startTime.includes(query) ||
+        endTime.includes(query) ||
+        location.includes(query)
+      );
+    });
+
+    todayEventDiv.innerHTML = "";
+
+    if (filtered.length === 0) {
+      todayEventDiv.textContent = "No matching events found.";
+      return;
+    }
+
+    filtered.forEach(ev => {
+      const item = document.createElement("div");
+
+      const locText = ev.location ? ` @ ${ev.location}` : "";
+      item.textContent = `${ev.eventName || "(Unnamed Event)"} — ${ev.startDate || "No Date"} ${ev.startTime || ""}${locText}`;
+
+      item.classList.add("event-item");
+      todayEventDiv.appendChild(item);
+    });
+  });
+});
+
+// Sets up the "Compare Calendar" button in the nav bar.
+function setupCompareCalendarButton() {
+
+  // Grab the Compare button from the DOM
+  const btn = document.getElementById("compare-calendar-btn");
+
+  // Safety check: button not found = do nothing
+  if (!btn) {
+    console.warn("Compare calendar button not found");
+    return;
+  }
+
+  // Attach click listener
+  btn.addEventListener("click", async () => {
+
+    // Ask user who they want to compare calendars with
+    const otherUsername = prompt("Compare calendar with who?");
+
+    if (!otherUsername) return;
+
+    // Get logged-in user's info
+    const username = sessionStorage.getItem("username");
+    const accessToken = sessionStorage.getItem("accessToken");
+
+    // Must be logged in
+    if (!username || !accessToken) {
+      alert("You must be logged in to compare calendars.");
+      return;
+    }
+
+    try {
+      // Call Electron IPC to compare calendars
+      const result = await window.electronAPI.compareCalendars(
+        username,
+        otherUsername,
+        accessToken
+      );
+
+      // No conflicts found
+      if (!result.conflicts || result.conflicts.length === 0) {
+        alert(`No conflicts with ${otherUsername}.`);
+        return;
+      }
+
+      // Build readable output for conflicts
+      const text = result.conflicts
+        .map(c =>
+          `YOU: ${c.me.eventName}
+${new Date(c.me.start).toLocaleString()} – ${new Date(c.me.end).toLocaleString()}
+
+THEM: ${c.them.eventName}
+${new Date(c.them.start).toLocaleString()} – ${new Date(c.them.end).toLocaleString()}
+
+OVERLAP:
+${new Date(c.overlap.start).toLocaleString()} – ${new Date(c.overlap.end).toLocaleString()}
+`
+        )
+        .join("\n------------------------\n");
+
+      // Display conflicts
+      alert(text);
+
+    } catch (err) {
+      console.error("Compare failed:", err);
+      alert("Failed to compare calendars.");
+    }
+  });
+}
