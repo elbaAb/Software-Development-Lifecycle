@@ -161,6 +161,7 @@ ipcMain.handle("login-user", async (event, { username, password }) => {
     }, {
       headers: { "Content-Type": "application/json" }
     });
+    console.log(response);
     return response.data; // { accessToken, refreshToken, message }
   } catch (err) {
     console.error("Login failed:", err.message);
@@ -258,13 +259,7 @@ ipcMain.handle("register-user", async (event, { email, username, password }) => 
       email,
       username,
       password
-    },
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`
-        }
-      });
+    });
     return response.data; // { accessToken, refreshToken, message }
   } catch (err) {
     console.error("Registration failed:", err.message);

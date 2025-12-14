@@ -204,6 +204,7 @@ function setupSignInPopup() {
     registerAccount.addEventListener("click", () => {
       if(signInSubmit.value == "Log In"){
         emailInput.style.display = "block";
+        emailInput.style.marginLeft = "5%"; //Aligning with other inputs
         signInSubmit.value = "Register"
       }else{
         emailInput.style.display = "none";
@@ -292,7 +293,12 @@ function setupAddCategoryPopup() {
 
         newCategoryDiv.appendChild(checkbox);
         newCategoryDiv.appendChild(label);
-        filterMenu.appendChild(newCategoryDiv);
+        
+        if (addCategoryButton && filterMenu.contains(addCategoryButton)) {
+          filterMenu.insertBefore(newCategoryDiv, addCategoryButton);
+        } else {
+          filterMenu.appendChild(newCategoryDiv);
+        }
 
         setupFilterCheckbox(checkbox, categoryName);
 
