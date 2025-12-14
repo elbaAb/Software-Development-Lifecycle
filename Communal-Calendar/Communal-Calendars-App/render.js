@@ -953,15 +953,15 @@ function buildCalendarGrid() {
 
     grid.style.position = "relative";
 
+    for (let hour = 0; hour < 24; hour++) {
     for (let day = 0; day < 7; day++) {
-        for (let hour = 0; hour < 24; hour++) {
-            const cell = document.createElement("div");
-            cell.className = "hour-cell";
-            cell.dataset.day = day;
-            cell.dataset.hour = hour;
-            grid.appendChild(cell);
-        }
-    }
+      const cell = document.createElement("div");
+      cell.className = "hour-cell";
+      cell.dataset.day = day;     // column
+      cell.dataset.hour = hour;   // row
+      grid.appendChild(cell);
+    }}
+    
 }
 
 function enableCellClick() {
@@ -995,7 +995,7 @@ function enableCellClick() {
     return;
   }
 
-  const dayOffset = Number(currentCell.dataset.day); // 0=Mon ... 6=Sun
+  const dayOffset = Number(currentCell.dataset.day); 
   const hour = Number(currentCell.dataset.hour);
 
   // ✅ Monday-based start of week (matches your drawCalendar day mapping)
