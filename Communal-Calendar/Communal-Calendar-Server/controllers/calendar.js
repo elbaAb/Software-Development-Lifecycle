@@ -11,6 +11,11 @@ function getEventsFilePath(username) {
   return path.join(__dirname, "..", "users", username, "events.json");
 }
 
+// Build a path to a user's RSVP file
+function getRSVPFilePath(username) {
+  return path.join(__dirname, "..", "users", username, "rsvp.json");
+}
+
 // Load events for a given user
 function loadEvents(username) {
   console.error(username);  
@@ -63,7 +68,7 @@ function rsvpUsers(newEvent, username){
     let rsvppath = path.join(__dirname, "..", "users", friend[0], "rsvp.json");
     console.log(rsvppath);
     let rsvps = loadJson(rsvppath);
-    let newrsvp = {"username": username, "event": newEvent, };
+    let newrsvp = {"username": username, "event": newEvent };
     rsvps.push(newrsvp);
     console.log("NEW RSVP", newrsvp);
     console.log("FINAL RSVP", rsvps);
@@ -80,7 +85,7 @@ function saveEvents(username, events) {
 
 // Append a new event for a given user
 function addEvent(username, newEvent) {
-  console.log("GASFVSDUVF")
+
   for(let friend in newEvent.friends){
     newEvent.friends[friend] = [ newEvent.friends[friend], "no response" ]
   }
@@ -103,6 +108,11 @@ function addCategory(username, newCategory) {
   categories.push(newCategory);
   saveCategories(username, categories);
   return newCategory;
+}
+
+function getRSVP(username){
+  rsvps = getRSVPFilePath(username);
+  return(rsvps);
 }
 
 module.exports = {
