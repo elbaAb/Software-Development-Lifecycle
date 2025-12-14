@@ -289,13 +289,43 @@ content="
     
  <div id="eventPopup" class="event-popup-overlay">
   <div class="event-popup">
-    <input type="text" id="popupEventName" placeholder="Event name" />
+
+    <label>Event Name</label>
+    <input id="popupEventName" type="text" />
+
+    <label>Start Date</label>
+    <input id="popupStartDate" type="date" />
+
+    <label>Start Time</label>
+    <input id="popupStartTime" type="time" />
+
+    <label>End Time</label>
+    <input id="popupEndTime" type="time" />
+
+    <label>Repeat</label>
+    <select id="popupRepeat">
+      <option value="none">One-time</option>
+      <option value="weekly">Weekly</option>
+    </select>
+
+    <label>Privacy</label>
+    <div>
+      <label><input type="radio" name="popupPrivacy" value="public" checked> Public</label>
+      <label><input type="radio" name="popupPrivacy" value="friends"> Friends</label>
+      <label><input type="radio" name="popupPrivacy" value="private"> Private</label>
+    </div>
+
+    <label>Travel Time (minutes)</label>
+    <input id="popupTravelTime" type="number" value="0" min="0" />
+
     <div class="event-popup-buttons">
       <button id="popupSaveBtn">Save</button>
       <button id="popupCancelBtn">Cancel</button>
     </div>
+
   </div>
 </div>
+  </div>
     </div>
 </div>
 </body>
