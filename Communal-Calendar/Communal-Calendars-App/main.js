@@ -162,6 +162,7 @@ ipcMain.handle("login-user", async (event, { username, password }) => {
     }, {
       headers: { "Content-Type": "application/json" }
     });
+    console.log(response);
     return response.data; // { accessToken, refreshToken, message }
   } catch (err) {
     console.error("Login failed:", err.message);
