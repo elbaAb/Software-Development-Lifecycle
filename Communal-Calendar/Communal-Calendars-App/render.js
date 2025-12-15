@@ -877,12 +877,12 @@ async function toggleFriendEvents(e) {
 
   const show = cb.checked;
 
-  // ✅ Keep all checkboxes for the same friend in sync (dropdown + other areas)
+  //  Keep all checkboxes for the same friend in sync (dropdown + other areas)
   document
     .querySelectorAll(`input[type="checkbox"][friend="${friendName}"]`)
     .forEach(x => (x.checked = show));
 
-  // ✅ If OFF: remove blocks for that friend
+  // If OFF: remove blocks for that friend
   if (!show) {
     document
       .querySelectorAll(`.event-block.friend-event[data-friend="${friendName}"]`)
@@ -890,7 +890,7 @@ async function toggleFriendEvents(e) {
     return;
   }
 
-  // ✅ If ON: fetch friend's events and draw onto friendsBox overlay
+  // If ON: fetch friend's events and draw onto friendsBox overlay
   try {
     const friendEvents = await fetchEvents(friendName);
     drawFriendCalendar(friendName, friendEvents);
@@ -1025,6 +1025,7 @@ function buildCalendarGrid() {
     if (!grid) return;
 
     let calendarBox = grid.querySelector("#calendarBox");
+    let friendsBox = grid.querySelector("#friendsBox"); 
 
     grid.innerHTML = "";
 
@@ -1034,6 +1035,13 @@ function buildCalendarGrid() {
     }
     grid.appendChild(calendarBox);
 
+    // --- friends overlay layer ---
+  if (!friendsBox) {
+    friendsBox = document.createElement("div");
+    friendsBox.id = "friendsBox";
+  }
+  grid.appendChild(friendsBox); //
+  
     grid.style.position = "relative";
 
     for (let hour = 0; hour < 24; hour++) {
@@ -1300,12 +1308,13 @@ function drawCalendar(events) {
 function drawFriendCalendar(friendName, events) {
   const grid = document.getElementById("calendarGrid");
   const friendsBox = document.getElementById("friendsBox");
+  
   if (!grid || !friendsBox) {
     console.warn("drawFriendCalendar: grid or friendsBox missing");
     return;
   }
 
-  // ✅ Remove old blocks for this friend (so we don't duplicate)
+  // Remove old blocks for this friend (so we don't duplicate)
   friendsBox
     .querySelectorAll(`.event-block.friend-event[data-friend="${friendName}"]`)
     .forEach(el => el.remove());
@@ -1349,6 +1358,8 @@ function drawFriendCalendar(friendName, events) {
     });
   });
 }
+
+console.log("Friend blocks now:", friendsBox.querySelectorAll(".friend-event").length);
 
 // ==============================
 // Toggle "Next Event Today" pane

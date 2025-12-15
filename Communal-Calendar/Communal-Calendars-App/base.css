@@ -230,6 +230,14 @@ body{
   pointer-events: none;
 }
 
+#friendsBox{
+  position: absolute;
+  inset: 0;
+  z-index: 15;          
+  pointer-events: none; 
+}
+
+
 .hour-cell {
   border: 1px solid #3a3a3a;
   background-color: #2b2b2b;
@@ -751,13 +759,6 @@ input[type="radio"], input[type="checkbox"]{
 
 #emailInput{
     display: none;
-}
-
-#friendsBox{
-  position: absolute;
-  inset: 0;
-  z-index: 15;          /* above calendarBox (yours is 10) but below popups */
-  pointer-events: none; /* doesn't block clicks */
 }
 
 .event-block.friend-event{

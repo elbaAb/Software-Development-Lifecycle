@@ -14,5 +14,21 @@
         "end": "12/19/2025, 3:00:00 AM"
       }
     ]
+  },
+  {
+    "eventName": "Demo 3 Test",
+    "startDate": "2025-12-20",
+    "endDate": "2025-12-20",
+    "startTime": "02:00",
+    "endTime": "03:00",
+    "privacy": "public",
+    "repeat": "none",
+    "friends": [],
+    "eventDates": [
+      {
+        "start": "12/20/2025, 2:00:00 AM",
+        "end": "12/20/2025, 3:00:00 AM"
+      }
+    ]
   }
 ]
