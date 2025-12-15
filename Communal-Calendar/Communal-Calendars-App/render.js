@@ -62,6 +62,9 @@ async function formSubmit(event) {
   await createEvent(sessionStorage.getItem("username"), NewEvent);
 }
 
+// Cache friend events so we don't refetch every toggle
+const friendEventsCache = new Map(); // key: friendName, value: events[]
+
 function setupCalendarUI() {
     buildCalendarGrid();
     enableCellClick();
@@ -874,12 +877,12 @@ async function toggleFriendEvents(e) {
 
   const show = cb.checked;
 
-  // Keep BOTH clones (dropdown + RSVP section) in sync
+  //  Keep all checkboxes for the same friend in sync (dropdown + other areas)
   document
     .querySelectorAll(`input[type="checkbox"][friend="${friendName}"]`)
     .forEach(x => (x.checked = show));
 
-  // If turned OFF: remove that friend's blocks and stop
+  // If OFF: remove blocks for that friend
   if (!show) {
     document
       .querySelectorAll(`.event-block.friend-event[data-friend="${friendName}"]`)
@@ -887,7 +890,7 @@ async function toggleFriendEvents(e) {
     return;
   }
 
-  // Turned ON: fetch friend's events and draw them
+  // If ON: fetch friend's events and draw onto friendsBox overlay
   try {
     const friendEvents = await fetchEvents(friendName);
     drawFriendCalendar(friendName, friendEvents);
@@ -895,7 +898,6 @@ async function toggleFriendEvents(e) {
     console.error("Failed to load friend's events:", friendName, err);
   }
 }
-
 
 
 async function requestFriend(e) {
@@ -1023,6 +1025,7 @@ function buildCalendarGrid() {
     if (!grid) return;
 
     let calendarBox = grid.querySelector("#calendarBox");
+    let friendsBox = grid.querySelector("#friendsBox"); 
 
     grid.innerHTML = "";
 
@@ -1032,6 +1035,13 @@ function buildCalendarGrid() {
     }
     grid.appendChild(calendarBox);
 
+    // --- friends overlay layer ---
+  if (!friendsBox) {
+    friendsBox = document.createElement("div");
+    friendsBox.id = "friendsBox";
+  }
+  grid.appendChild(friendsBox); //
+  
     grid.style.position = "relative";
 
     for (let hour = 0; hour < 24; hour++) {
@@ -1297,11 +1307,15 @@ function drawCalendar(events) {
 
 function drawFriendCalendar(friendName, events) {
   const grid = document.getElementById("calendarGrid");
-  const calendarBox = document.getElementById("calendarBox");
-  if (!grid || !calendarBox) return;
+  const friendsBox = document.getElementById("friendsBox");
+  
+  if (!grid || !friendsBox) {
+    console.warn("drawFriendCalendar: grid or friendsBox missing");
+    return;
+  }
 
-  // remove old blocks for this friend
-  document
+  // Remove old blocks for this friend (so we don't duplicate)
+  friendsBox
     .querySelectorAll(`.event-block.friend-event[data-friend="${friendName}"]`)
     .forEach(el => el.remove());
 
@@ -1313,15 +1327,18 @@ function drawFriendCalendar(friendName, events) {
 
   const cellRect = sampleCell.getBoundingClientRect();
   const cellHeight = cellRect.height;
+
+  // same logic as drawCalendar uses
   const firstCellTop = cellRect.top - gridRect.top;
 
-  (events || []).forEach(event => {
-    (event.eventDates || []).forEach(date => {
+  (events || []).forEach(ev => {
+    (ev.eventDates || []).forEach(date => {
       const start = new Date(date.start);
       const end = new Date(date.end);
-      if (isNaN(start) || isNaN(end)) return;
 
-      const day = (start.getDay() + 6) % 7;
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) return;
+
+      const day = (start.getDay() + 6) % 7; // Monday=0
       const startHour = start.getHours() + start.getMinutes() / 60;
       const endHour = end.getHours() + end.getMinutes() / 60;
       const duration = endHour - startHour;
@@ -1330,18 +1347,19 @@ function drawFriendCalendar(friendName, events) {
       const block = document.createElement("div");
       block.className = "event-block friend-event";
       block.dataset.friend = friendName;
-      block.textContent = `${event.eventName || "(Event)"} (${friendName})`;
+      block.textContent = `${ev.eventName || "(Event)"} (${friendName})`;
 
       block.style.left = `${day * cellWidth}px`;
       block.style.top = `${firstCellTop + startHour * cellHeight}px`;
       block.style.width = `${cellWidth}px`;
       block.style.height = `${duration * cellHeight}px`;
-      block.style.opacity = "0.7";
 
-      calendarBox.appendChild(block);
+      friendsBox.appendChild(block);
     });
   });
 }
+
+console.log("Friend blocks now:", friendsBox.querySelectorAll(".friend-event").length);
 
 // ==============================
 // Toggle "Next Event Today" pane
