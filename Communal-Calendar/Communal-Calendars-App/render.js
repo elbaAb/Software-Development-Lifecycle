@@ -496,6 +496,11 @@ function setupProfilePictureHandlers() {
         // Clear session storage (temporary)
         window.sessionStorage.clear();
 
+const calendarBox = document.getElementById("calendarBox");
+      if (calendarBox) {
+        calendarBox.innerHTML = "";
+      }
+
         // clear these so if you relogin it doesn't refill them
         let content = document.getElementById("friends-dropdown-content");
         let rsvpFriends = document.getElementById("search-friends-section");
