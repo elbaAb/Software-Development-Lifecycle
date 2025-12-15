@@ -661,6 +661,20 @@ input[type="radio"], input[type="checkbox"]{
     display: none;
 }
 
+#friendsBox{
+  position: absolute;
+  inset: 0;
+  z-index: 15;          /* above calendarBox (yours is 10) but below popups */
+  pointer-events: none; /* doesn't block clicks */
+}
+
+.event-block.friend-event{
+  opacity: 0.65;
+  z-index: 16;
+  border-style: dashed; /* easy visual difference */
+}
+
+
 #friends-dropdown{
     position:relative;
     width: 120px;
