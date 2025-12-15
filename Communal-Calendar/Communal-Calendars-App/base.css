@@ -299,6 +299,41 @@ body{
   background-color: #5bb0e6;
 }
 
+.friends-picker {
+  position: absolute;
+  display: none;
+  z-index: 1100;
+  background: #ffffff;
+  border: 1px solid #333;
+  border-radius: 4px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  padding: 8px;
+  min-width: 200px;
+  font-size: 0.85rem;
+}
+
+.friends-picker-header {
+  font-weight: bold;
+  margin-bottom: 6px;
+}
+
+#popupFriendsList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 180px;   
+  overflow-y: auto;    
+  overflow-x: hidden;     
+  padding-right: 4px;    
+  margin-bottom: 6px;
+  box-sizing: border-box;
+}
+
+.friends-picker-buttons {
+  display: flex;
+  justify-content: flex-end;
+}
+
 .calendar-day-header {
   display: grid;
   grid-template-columns: 80px repeat(7, 1fr);

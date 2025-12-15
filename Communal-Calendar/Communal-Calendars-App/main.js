@@ -30,6 +30,7 @@ app.on("window-all-closed", () => {
   if (process.platform !== "darwin") app.quit();    //if on mac doesn't close app if all windows are closed like native applications
 });
 
+const server = "http://localhost:3000";
 
 // added new IPC handlers for persistant login and profile pictures
 // Saves user session to disk (username, tokens, etc.)
@@ -155,7 +156,7 @@ ipcMain.handle("load-profile-picture", async () => {
 // Handles user login
 ipcMain.handle("login-user", async (event, { username, password }) => {
   try {
-    const response = await axios.post("http://localhost:3000/users/login", {
+    const response = await axios.post(`${server}/users/login`, {
       username,
       password
     }, {
@@ -173,7 +174,7 @@ ipcMain.handle("login-user", async (event, { username, password }) => {
 ipcMain.handle("create-event", async (event, { username, eventData, accessToken }) => {
   try {
     const response = await axios.post(
-      `http://localhost:3000/calendar/events/${username}`,
+      `${server}/calendar/events/${username}`,
       eventData,
       {
         headers: {
@@ -192,7 +193,7 @@ ipcMain.handle("create-event", async (event, { username, eventData, accessToken 
 // Retrieves events for a user
 ipcMain.handle("get-events", async (event, { username, accessToken }) => {
   try {
-    const response = await axios.get(`http://localhost:3000/calendar/events/${username}`, {
+    const response = await axios.get(`${server}/calendar/events/${username}`, {
       headers: {
         Authorization: `Bearer ${accessToken}`
       }
@@ -207,7 +208,7 @@ ipcMain.handle("get-events", async (event, { username, accessToken }) => {
 // Retrieves categories for a user
 ipcMain.handle("get-friends", async (event, { username, accessToken }) => {
   try {
-    const response = await axios.get(`http://localhost:3000/users/friends/${username}`, {
+    const response = await axios.get(`${server}/users/friends/${username}`, {
       headers: {
         Authorization: `Bearer ${accessToken}`
       }
@@ -221,7 +222,7 @@ ipcMain.handle("get-friends", async (event, { username, accessToken }) => {
 
 ipcMain.handle("retrieve-categories", async (event, { username, accessToken }) => {
   try {
-    const response = await axios.get(`http://localhost:3000/calendar/categories/${username}`,{ 
+    const response = await axios.get(`${server}/calendar/categories/${username}`,{ 
       headers: {
         Authorization: `Bearer ${accessToken}`
       }
@@ -236,7 +237,7 @@ ipcMain.handle("retrieve-categories", async (event, { username, accessToken }) =
 // Creates a new category
 ipcMain.handle("create-category", async (event, { username, category, accessToken }) => {
   try {
-    const response = await axios.post(`http://localhost:3000/calendar/categories/${username}`, 
+    const response = await axios.post(`${server}/calendar/categories/${username}`, 
       category,
       {
         headers: {
@@ -255,7 +256,7 @@ ipcMain.handle("create-category", async (event, { username, category, accessToke
 // Handles user registration
 ipcMain.handle("register-user", async (event, { email, username, password }) => {
   try {
-    const response = await axios.post("http://localhost:3000/users/register", {
+    const response = await axios.post(`${server}/users/register`, {
       email,
       username,
       password
@@ -271,7 +272,7 @@ ipcMain.handle("register-user", async (event, { email, username, password }) => 
 ipcMain.handle("request-friend", async (event, { requester, requestee, accessToken }) => {
   try{
     console.log("Sending friend request:", {requester, requestee});
-    const response = await axios.post(`http://localhost:3000/users/requestfriend`, {
+    const response = await axios.post(`${server}/users/requestfriend`, {
       requester, 
       requestee, 
     },
@@ -292,7 +293,7 @@ ipcMain.handle("request-friend", async (event, { requester, requestee, accessTok
 // Accepts a friend request
 ipcMain.handle("accept-friend", async (event, { requester, requestee, accessToken }) => {
   try{
-    const response = await axios.post(`http://localhost:3000/users/acceptfriend`, {
+    const response = await axios.post(`${server}/users/acceptfriend`, {
       requester, 
       requestee, 
     },
@@ -313,7 +314,7 @@ ipcMain.handle("accept-friend", async (event, { requester, requestee, accessToke
 // Denies a friend request
 ipcMain.handle("deny-friend", async (event, { requester, requestee, accessToken }) => {
   try{
-    const response = await axios.post(`http://localhost:3000/users/denyfriend`, {
+    const response = await axios.post(`${server}/users/denyfriend`, {
       requester, 
       requestee, 
     },
@@ -333,7 +334,7 @@ ipcMain.handle("deny-friend", async (event, { requester, requestee, accessToken 
 
 ipcMain.handle("change-favorite", async (event, {username, friend, accessToken}) => {
   try{
-    const response = await axios.post(`http://localhost:3000/users/changefavorite`, {
+    const response = await axios.post(`${server}/users/changefavorite`, {
       username,
       friend,
     },
@@ -352,7 +353,7 @@ ipcMain.handle("change-favorite", async (event, {username, friend, accessToken})
 
 ipcMain.handle("remove-friend", async (event, {username, friend, accessToken}) => {
   try{
-    const response = await axios.post(`http://localhost:3000/users/removefriend`, {
+    const response = await axios.post(`${server}/users/removefriend`, {
       username,
       friend,
     },
@@ -372,7 +373,7 @@ ipcMain.handle("remove-friend", async (event, {username, friend, accessToken}) =
 ipcMain.handle("get-requests", async (event, {username, accessToken}) => {
   try{
     console.log("username in main", username)
-    const response = await axios.get(`http://localhost:3000/users/getrequests/${username}`,
+    const response = await axios.get(`${server}/users/getrequests/${username}`,
     {
       headers: {
       "Content-Type": "application/json",
@@ -382,6 +383,44 @@ ipcMain.handle("get-requests", async (event, {username, accessToken}) => {
 
     console.log("RESPONSE:", response);
     return response.data;
+  }catch(err){
+    console.log(err);
+  }
+})
+
+ipcMain.handle("get-rsvp", async (event, {username, accessToken}) => {
+  try{
+    const response = await axios.get(`${server}/calendar/getrsvp/${username}`,
+    {
+      headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`
+      }
+    })
+    console.log(response);
+    return response;
+
+  }catch(err){
+    console.log(err)
+  }
+})
+
+ipcMain.handle("respond-rsvp", async (event, { username, stat, events, accessToken }) => {
+  try{
+    const response = await axios.post(`${server}/calendar/respondrsvp`,
+      {
+        username,
+        stat,
+        events,
+      },
+      {
+        headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`
+        }
+      })
+    console.log(response);
+    return response;
   }catch(err){
     console.log(err);
   }

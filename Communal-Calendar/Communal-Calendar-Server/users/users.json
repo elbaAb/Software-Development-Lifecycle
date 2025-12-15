@@ -13,5 +13,10 @@
     "username": "elba",
     "password": "$2b$12$3f.PSSFkl8nMEkdnrEF9Ae9NSjUaH.PKCMLAnq/Zp5rjJXCrEj09y",
     "email": "123abc"
+  },
+  {
+    "username": "demo3",
+    "password": "$2b$12$RovUpXxZGJOikn0f6oFAVOEzSIaY22aejovf/hxoF2899JXqar7RC",
+    "email": "EMAIL"
   }
 ]

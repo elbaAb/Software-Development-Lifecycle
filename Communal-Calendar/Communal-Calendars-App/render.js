@@ -274,7 +274,6 @@ function setupAddCategoryPopup() {
           console.log("createCategory result:", result);
         } catch (err) {
           console.error("createCategory failed:", err);
-          alert("Could not save category to server");
           return;
         }
 
@@ -371,6 +370,7 @@ document.addEventListener("DOMContentLoaded", async (event) =>{
   setupAllFilterCheckboxes();
   setupProfilePictureHandlers();  // Set up profile picture change and sign out handlers
   setupCalendarUI();
+  setupFriendsDropdown();
 
   // Check for saved user session when app starts
   await checkSavedUserOnStart();
@@ -482,7 +482,6 @@ function setupProfilePictureHandlers() {
         }
       } catch (error) {
         console.error('Error changing profile picture:', error);
-        alert('Failed to change profile picture. Please try again.');
       }
     });
   }
@@ -496,15 +495,19 @@ function setupProfilePictureHandlers() {
         
         // Clear session storage (temporary)
         window.sessionStorage.clear();
+
+        // clear these so if you relogin it doesn't refill them
+        let content = document.getElementById("friends-dropdown-content");
+        let rsvpFriends = document.getElementById("search-friends-section");
+        content.innerHTML = "";     
+        rsvpFriends.innerHTML = "";
         
         // Update UI to show Sign In button again
         updateUserDisplay(null);
         
         console.log("Signed out successfully");
-        alert("You have been signed out.");
       } catch (error) {
         console.error('Error signing out:', error);
-        alert('Error signing out. Please try again.');
       }
     });
   }
@@ -583,7 +586,6 @@ async function loginUser(username, password) {
     return { accessToken, refreshToken };
   } catch (err) {
     console.error("Login failed:", err);
-    alert("Login failed. Please check your username and password.");
     throw err;
   }
 }
@@ -624,7 +626,6 @@ async function registerUser(email, username, password) {
     return { accessToken, refreshToken };
   } catch (err) {
     console.error("Registration failed:", err);
-    alert("Registration failed. Please try a different username or email.");
     throw err;
   }
 }
@@ -641,19 +642,18 @@ async function createEvent(username, eventData) {
   }
 }
 
-function setupFriendsDropdown(e) {
-  let friends_button = document.getElementById("friends-dropdown-button");
-  let content = document.getElementById("friends-dropdown-content");
+function setupFriendsDropdown() {
+  const friends_button = document.getElementById("friends-dropdown-button");
+  const content = document.getElementById("friends-dropdown-content");
 
+  content.style.display = "none";
   friends_button.addEventListener("click", () => {
-
     if(content.style.display == "none"){
       content.style.display = "block";
     }else {
       content.style.display = "none";
     }
   })
-
 
 }
 
@@ -676,18 +676,49 @@ async function getRSVP(username, accessToken){
       title = document.createElement("h2");
       date = document.createElement("h3");
       time = document.createElement("h3");
-      days = document.createElement("p")
+      days = document.createElement("p");
+      buttoncontainer = document.createElement("div")
+      accept = document.createElement("button");
+      decline = document.createElement("button");
 
-      title.textContent = item.eventName;
-      date.textContent = `${item.startDate} - ${item.endDate}`
-      time.textContent = `${item.startTime} - ${item.endTime}`
+      title.textContent = `${item.newEvent.eventName} From ${item.username}`
+      date.textContent = `${item.startDate} - ${item.endDate}`;
+      time.textContent = `${item.startTime} - ${item.endTime}`;
 
-      for( let day of item.event){
+      accept.textContent = "Accept";
+      deny.textContent = "Deny";
+      accept.setAttribute("response", true)
+      deny.setAttribute("response", false)
+      accept.setAttribute("event", item.newEvent.eventName)
+      deny.setAttribute("event", item.newEvent.eventName)
+      accept.addEventListener("click", respondRSVP)
+      deny.addEventListener("click", respondRSVP)
 
-      }
+      container.appendChild(title);
+      container.appendChild(date);
+      container.appendChild(time);
+      container.appendChild(days);
+
+      buttoncontainer.appendChild(accept);
+      buttoncontainer.appendChild(deny);
+
+
     }
   }
   catch(err){
+
+  }
+}
+
+async function respondRSVP(e){
+  try{
+    const accessToken = window.sessionStorage.getItem("accessToken");
+    const username = window.sessionStorage.getItem("username");
+    button = e.currentTarget;
+    stat = button.getAttribute("response");
+    events = button.getAttribute("event");
+    let response = await window.electronAPI.respondRSVP(username, stat, events, accessToken);
+  }catch(err){
 
   }
 }
@@ -705,62 +736,77 @@ async function getCategories(username, accessToken) {
 async function getFriends(username, accessToken) {
   try {
     const friends = await window.electronAPI.getFriends(username, accessToken);
-    console.log("Friends:", friends);
+
+    window.sessionStorage.setItem("friends", JSON.stringify(friends));
+
+    console.log("FRIENDS FROM SESSION STORAGE")
+    console.log(window.sessionStorage.getItem("friends"))
 
     let content = document.getElementById("friends-dropdown-content");
     let rsvpFriends = document.getElementById("search-friends-section");
 
-    content.innerHTML = "";     // clear these so if you relogin it doesn't refill them
+    content.innerHTML = "";     
     rsvpFriends.innerHTML = "";
+
+    console.log("Friends:", friends);
+
+    let favoritefriends = document.createElement("div");
+    favoritefriends.className = "Favorite";
+    let nonfavoritefriends = document.createElement("div");
+    nonfavoritefriends.className = "nonFavorite";
+    let rsvpfavoritefriends = document.createElement("div");
+    rsvpfavoritefriends.className = "Favorite";
+    let rsvpnonfavoritefriends = document.createElement("div");
+    rsvpnonfavoritefriends.className = "nonFavorite";
+    
+    content.appendChild(favoritefriends);
+    content.appendChild(nonfavoritefriends);
+    rsvpFriends.appendChild(rsvpfavoritefriends);
+    rsvpFriends.appendChild(rsvpnonfavoritefriends);
 
     const requests = await getRequests(username, accessToken);
 
-    console.log(requests);
-
-    for( let request of requests ){
-      console.log("Friend request ", request);
-
-      let container = document.createElement("div");
-      container.setAttribute("request", request.from);
-      let name = document.createElement("div");
-      name.textContent = request.from;
-      let accept = document.createElement("button");
-      accept.textContent = "Accept";
-      accept.setAttribute("friend", request.from);
-      accept.addEventListener("click", acceptFriend);
-      let decline = document.createElement("button");
-      decline.textContent = "Decline";
-      decline.setAttribute("friend", request.from);
-      decline.addEventListener("click", denyFriend);
-
-      container.appendChild(name)
-      container.appendChild(accept);
-      container.appendChild(decline);
-
-      content.appendChild(container);
-    }
-
     if (content) {
-      for (let i = 0; i < friends.length; i++) {
+      for( let request of requests ){
+        console.log("Friend request ", request);
+
+        let container = document.createElement("div");
+        container.setAttribute("request", request.from);
+        let name = document.createElement("div");
+        name.textContent = request.from;
+        let accept = document.createElement("button");
+        accept.textContent = "Accept";
+        accept.setAttribute("friend", request.from);
+        accept.addEventListener("click", acceptFriend);
+        let decline = document.createElement("button");
+        decline.textContent = "Decline";
+        decline.setAttribute("friend", request.from);
+        decline.addEventListener("click", denyFriend);
+
+        container.appendChild(name)
+        container.appendChild(accept);
+        container.appendChild(decline);
+
+        content.appendChild(container);
+      }
+
+      for (let friend of friends) {
+
         // Base container with name + checkbox
         let container = document.createElement("div");
         container.className = "Friends-Drop-Container";
-        container.setAttribute("friendParent",  friends[i].username)
+        container.setAttribute("friendParent",  friend.username)
 
         let name = document.createElement("label");
 
         let check = document.createElement("input");
         check.type = "checkbox";
         check.checked = false;
-        check.setAttribute("friend", friends[i].username);
+        check.setAttribute("friend", friend.username);
         name.appendChild(check);
 
-        name.appendChild(document.createTextNode(friends[i].username));
+        name.appendChild(document.createTextNode(friend.username));
         container.appendChild(name);
-
-        if (friends[i].favorite) {
-          container.className = "Friends-Drop-Container favoriteFriend";
-        }
 
         // Clone the base container for each section
         let rsvpClone = container.cloneNode(true);
@@ -768,12 +814,12 @@ async function getFriends(username, accessToken) {
 
         // Add buttons ONLY to the content clone
         let favorite = document.createElement("button");
-        favorite.setAttribute("friend", friends[i].username);
+        favorite.setAttribute("friend", friend.username);
         favorite.addEventListener("click", changeFavorite);
-        favorite.textContent = friends[i].favorite ? "Unfavorite" : "Favorite";
+        favorite.textContent = friend.favorite ? "Unfavorite" : "Favorite";
 
         let remove = document.createElement("button");
-        remove.setAttribute("friend", friends[i].username);
+        remove.setAttribute("friend", friend.username);
         remove.addEventListener("click", removeFriend);
         remove.textContent = "Remove";
 
@@ -781,14 +827,15 @@ async function getFriends(username, accessToken) {
         contentClone.appendChild(remove);
 
         // Append to each section
-        rsvpFriends.appendChild(rsvpClone);
-        content.appendChild(contentClone);
+        if(friend.favorite){
+          favoritefriends.appendChild(contentClone);
+          rsvpfavoritefriends.appendChild(rsvpClone);
+        }else{
+          nonfavoritefriends.appendChild(contentClone);
+          rsvpnonfavoritefriends.appendChild(rsvpClone);
+        }
 
         // Attach checkbox listener to both clones
-        let rsvpCheckbox = rsvpClone.querySelector("input[type=checkbox]");
-        if (rsvpCheckbox) {
-          rsvpCheckbox.addEventListener("change", toggleFriendEvents);
-        }
         let contentCheckbox = contentClone.querySelector("input[type=checkbox]");
         if (contentCheckbox) {
           contentCheckbox.addEventListener("change", toggleFriendEvents);
@@ -814,9 +861,37 @@ async function getFriends(username, accessToken) {
   }
 }
 
-function toggleFriendEvents(e){
+// Toggle Friend Calendar Overlay
+async function toggleFriendEvents(e) {
+  const cb = e.currentTarget;
+  const friendName = cb.getAttribute("friend");
+  if (!friendName) return;
 
+  const show = cb.checked;
+
+  // Keep BOTH clones (dropdown + RSVP section) in sync
+  document
+    .querySelectorAll(`input[type="checkbox"][friend="${friendName}"]`)
+    .forEach(x => (x.checked = show));
+
+  // If turned OFF: remove that friend's blocks and stop
+  if (!show) {
+    document
+      .querySelectorAll(`.event-block.friend-event[data-friend="${friendName}"]`)
+      .forEach(el => el.remove());
+    return;
+  }
+
+  // Turned ON: fetch friend's events and draw them
+  try {
+    const friendEvents = await fetchEvents(friendName);
+    drawFriendCalendar(friendName, friendEvents);
+  } catch (err) {
+    console.error("Failed to load friend's events:", friendName, err);
+  }
 }
+
+
 
 async function requestFriend(e) {
   try{
@@ -873,14 +948,9 @@ async function changeFavorite(e){
     const button = e.currentTarget;
     const friend = button.getAttribute("friend");
     const username = sessionStorage.getItem("username");
-    const result = await window.electronAPI.changeFavorite(username, friend, accessToken);
-    console.log(result)
-    if(result){
-      button.textContent = "Unfavorite"
-    }else{
-      button.textContent = "Favorite"
-    }
-    return(result);
+    await window.electronAPI.changeFavorite(username, friend, accessToken);
+    
+    getFriends(username, accessToken);
   }catch(err){
     console.log("failed to change favorite: ", err)
   }
@@ -959,76 +1029,172 @@ function buildCalendarGrid() {
 
     grid.style.position = "relative";
 
+    for (let hour = 0; hour < 24; hour++) {
     for (let day = 0; day < 7; day++) {
-        for (let hour = 0; hour < 24; hour++) {
-            const cell = document.createElement("div");
-            cell.className = "hour-cell";
-            cell.dataset.day = day;
-            cell.dataset.hour = hour;
-            grid.appendChild(cell);
-        }
-    }
+      const cell = document.createElement("div");
+      cell.className = "hour-cell";
+      cell.dataset.day = day;     
+      cell.dataset.hour = hour;   
+      grid.appendChild(cell);
+    }}
+    
 }
 
 function enableCellClick() {
-    const grid = document.getElementById("calendarGrid");
-    const popup = document.getElementById("eventPopup");
-    const popupInput = document.getElementById("popupEventName");
-    const saveBtn = document.getElementById("popupSaveBtn");
-    const cancelBtn = document.getElementById("popupCancelBtn");
+  const grid = document.getElementById("calendarGrid");
+  const popup = document.getElementById("eventPopup");
 
-    let currentCell = null;
+  let clickedDate = null;
 
-    grid.querySelectorAll(".hour-cell").forEach(cell => {
-        cell.style.cursor = "pointer";
-        cell.addEventListener("click", (e) => {
-            e.stopPropagation();
-            currentCell = cell;
+  grid.querySelectorAll(".hour-cell").forEach(cell => {
+    cell.addEventListener("click", e => {
+      e.stopPropagation();
 
-            const rect = cell.getBoundingClientRect();
-            popup.style.top = `${rect.bottom}px`;
-            popup.style.left = `${rect.left}px`;
-            popupInput.value = "";
-            popup.style.display = "block";
-            popupInput.focus();
-        });
+      const day = Number(cell.dataset.day);
+      const hour = Number(cell.dataset.hour);
+
+      const now = new Date();
+      const mondayIndex = (now.getDay() + 6) % 7;
+      const weekStart = new Date(now);
+      weekStart.setDate(now.getDate() - mondayIndex);
+      weekStart.setHours(0, 0, 0, 0);
+
+      const start = new Date(weekStart);
+      start.setDate(weekStart.getDate() + day);
+      start.setHours(hour, 0, 0, 0);
+
+      clickedDate = start;
+
+      document.getElementById("popupEventName").value = "";
+      document.getElementById("popupStartDate").value = start.toISOString().split("T")[0];
+      document.getElementById("popupStartTime").value = start.toTimeString().slice(0, 5);
+
+      const end = new Date(start);
+      end.setHours(end.getHours() + 1);
+      document.getElementById("popupEndTime").value = end.toTimeString().slice(0, 5);
+
+      const rect = cell.getBoundingClientRect();
+      popup.style.top = `${rect.bottom}px`;
+      popup.style.left = `${rect.left}px`;
+
+      popup.style.display = "block";
     });
+  });
 
-    saveBtn.addEventListener("click", async () => {
-  const eventName = popupInput.value.trim();
-  if (!eventName || !currentCell) {
-    popup.style.display = "none";
-    return;
+  document.getElementById("popupCancelBtn")
+    .addEventListener("click", () => popup.style.display = "none");
+
+  document.getElementById("popupSaveBtn")
+    .addEventListener("click", () => savePopupEvent(clickedDate));
+}
+const popupFriendsBtn = document.getElementById("popupFriendsBtn");
+const friendsPicker = document.getElementById("popupFriendsPicker");
+const friendsList = document.getElementById("popupFriendsList");
+const friendsDoneBtn = document.getElementById("popupFriendsDone");
+const friendsSummary = document.getElementById("popupFriendsSummary");
+
+let selectedPopupFriends = [];
+
+
+popupFriendsBtn.addEventListener("click", () => {
+  friendsList.innerHTML = "";
+
+  const friends =
+    JSON.parse(sessionStorage.getItem("friends")) || [];
+
+  if (friends.length === 0) {
+    friendsList.textContent = "No friends found.";
+  } else {
+    friends.forEach(f => {
+      const label = document.createElement("label");
+      label.style.display = "flex";
+      label.style.alignItems = "center";
+      label.style.gap = "6px";
+
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.value = f.username;
+      checkbox.checked = selectedPopupFriends.includes(f.username);
+
+      checkbox.addEventListener("change", () => {
+        if (checkbox.checked) {
+          selectedPopupFriends.push(f.username);
+        } else {
+          selectedPopupFriends = selectedPopupFriends.filter(
+            name => name !== f.username
+          );
+        }
+      });
+
+      label.appendChild(checkbox);
+      label.appendChild(document.createTextNode(f.username));
+      friendsList.appendChild(label);
+    });
   }
 
-  const dayOffset = Number(currentCell.dataset.day); // 0=Mon ... 6=Sun
-  const hour = Number(currentCell.dataset.hour);
+  const mainPopup = document.getElementById("eventPopup");
+  const rect = mainPopup.getBoundingClientRect();
 
-  // ✅ Monday-based start of week (matches your drawCalendar day mapping)
-  const now = new Date();
-  const mondayIndex = (now.getDay() + 6) % 7; // Sun(0)->6, Mon(1)->0, ...
-  const weekStart = new Date(now);
-  weekStart.setHours(0, 0, 0, 0);
-  weekStart.setDate(now.getDate() - mondayIndex);
+  friendsPicker.style.top = `${rect.bottom + 4}px`;
+  friendsPicker.style.left = `${rect.left}px`;
+  friendsPicker.style.display = "block";
+});
 
-  // Build start/end based on clicked cell
-  const start = new Date(weekStart);
-  start.setDate(weekStart.getDate() + dayOffset);
-  start.setHours(hour, 0, 0, 0);
+friendsDoneBtn.addEventListener("click", () => {
+  friendsPicker.style.display = "none";
 
-  const end = new Date(start);
-  end.setHours(end.getHours() + 1);
+  friendsSummary.textContent =
+    selectedPopupFriends.length
+      ? selectedPopupFriends.join(", ")
+      : "(none)";
+});
+
+async function savePopupEvent(baseDate) {
+  const eventName = document.getElementById("popupEventName").value.trim();
+  if (!eventName || !baseDate) return;
+
+  const startTime = document.getElementById("popupStartTime").value;
+  const endTime = document.getElementById("popupEndTime").value;
+  const repeat = document.getElementById("popupRepeat").value;
+
+  const privacy =
+    document.querySelector('input[name="popupPrivacy"]:checked')?.value;
+
+  const travelTime =
+    parseInt(document.getElementById("popupTravelTime").value || "0", 10);
+
+const friends = Array.from(
+  document.querySelectorAll('#popupFriendsList input[type="checkbox"]:checked')
+).map(cb => cb.getAttribute("friend") || cb.value);
+
+  const [sh, sm] = startTime.split(":").map(Number);
+  const [eh, em] = endTime.split(":").map(Number);
+
+  const start = new Date(baseDate);
+  start.setHours(sh, sm, 0, 0);
+  start.setMinutes(start.getMinutes() - travelTime);
+
+  const end = new Date(baseDate);
+  end.setHours(eh, em, 0, 0);
+  end.setMinutes(end.getMinutes() + travelTime);
+
+  const isoDate = start.toISOString().split("T")[0];
 
   const newEvent = {
     eventName,
-    startDate: start.toISOString().split("T")[0],
-    endDate: end.toISOString().split("T")[0],
-    startTime: start.toTimeString().slice(0, 5),
-    endTime: end.toTimeString().slice(0, 5),
-    privacy: "public",
-    repeat: "none",
-    friends: [],
-    eventDates: [{ start: start.toLocaleString(), end: end.toLocaleString() }]
+    startDate: isoDate,
+    endDate: isoDate,
+    startTime,
+    endTime,
+    privacy,
+    repeat,
+    friends,
+    eventDates: [
+      {
+        start: start.toLocaleString(),
+        end: end.toLocaleString()
+      }
+    ]
   };
 
   try {
@@ -1038,14 +1204,11 @@ function enableCellClick() {
     const updatedEvents = await fetchEvents(username);
     drawCalendar(updatedEvents);
   } catch (err) {
-    console.error("Save event error:", err);
-    alert("Failed to save event.");
+    console.error("Event save failed:", err);
+    alert("Failed to create event.");
   } finally {
-    popup.style.display = "none";
+    document.getElementById("eventPopup").style.display = "none";
   }
-});
-
-    cancelBtn.addEventListener("click", () => (popup.style.display = "none"));
 }
 
 function drawCalendar(events) {
@@ -1073,7 +1236,6 @@ function drawCalendar(events) {
     const cellRect = sampleCell.getBoundingClientRect();
     const cellHeight = cellRect.height;
 
-    //CRITICAL FIX: offset to the first hour row
     const firstCellTop =
         cellRect.top - gridRect.top;
 
@@ -1097,7 +1259,6 @@ function drawCalendar(events) {
                 return;
             }
 
-            // Monday = 0, Sunday = 6
             const day = (start.getDay() + 6) % 7;
 
             const startHour = start.getHours() + start.getMinutes() / 60;
@@ -1116,7 +1277,7 @@ function drawCalendar(events) {
             block.textContent = event.eventName;
 
             block.style.left = `${day * cellWidth}px`;
-            block.style.top = `${firstCellTop + startHour * cellHeight}px`; // ✅ FIX
+            block.style.top = `${firstCellTop + startHour * cellHeight}px`;
             block.style.width = `${cellWidth}px`;
             block.style.height = `${duration * cellHeight}px`;
 
@@ -1127,6 +1288,54 @@ function drawCalendar(events) {
     });
 
     console.log("Finished rendering events.");
+}
+
+function drawFriendCalendar(friendName, events) {
+  const grid = document.getElementById("calendarGrid");
+  const calendarBox = document.getElementById("calendarBox");
+  if (!grid || !calendarBox) return;
+
+  // remove old blocks for this friend
+  document
+    .querySelectorAll(`.event-block.friend-event[data-friend="${friendName}"]`)
+    .forEach(el => el.remove());
+
+  const gridRect = grid.getBoundingClientRect();
+  const cellWidth = gridRect.width / 7;
+
+  const sampleCell = grid.querySelector(".hour-cell");
+  if (!sampleCell) return;
+
+  const cellRect = sampleCell.getBoundingClientRect();
+  const cellHeight = cellRect.height;
+  const firstCellTop = cellRect.top - gridRect.top;
+
+  (events || []).forEach(event => {
+    (event.eventDates || []).forEach(date => {
+      const start = new Date(date.start);
+      const end = new Date(date.end);
+      if (isNaN(start) || isNaN(end)) return;
+
+      const day = (start.getDay() + 6) % 7;
+      const startHour = start.getHours() + start.getMinutes() / 60;
+      const endHour = end.getHours() + end.getMinutes() / 60;
+      const duration = endHour - startHour;
+      if (duration <= 0) return;
+
+      const block = document.createElement("div");
+      block.className = "event-block friend-event";
+      block.dataset.friend = friendName;
+      block.textContent = `${event.eventName || "(Event)"} (${friendName})`;
+
+      block.style.left = `${day * cellWidth}px`;
+      block.style.top = `${firstCellTop + startHour * cellHeight}px`;
+      block.style.width = `${cellWidth}px`;
+      block.style.height = `${duration * cellHeight}px`;
+      block.style.opacity = "0.7";
+
+      calendarBox.appendChild(block);
+    });
+  });
 }
 
 // ==============================
@@ -1147,7 +1356,7 @@ document.addEventListener("DOMContentLoaded", () => {
     visible = !visible;
 
     rightSection.style.display = visible ? "flex" : "none";
-    toggleBtn.textContent = visible ? "Hide Today" : "Show Today";
+    toggleBtn.textContent = visible ? "Hide Search" : "Show Search";
   });
 });
 
@@ -1175,8 +1384,7 @@ document.addEventListener("DOMContentLoaded", () => {
         name.includes(query) ||
         startDate.includes(query) ||
         startTime.includes(query) ||
-        endTime.includes(query) ||
-        location.includes(query)
+        endTime.includes(query) 
       );
     });
 
@@ -1198,72 +1406,3 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 });
-
-// Sets up the "Compare Calendar" button in the nav bar.
-function setupCompareCalendarButton() {
-
-  // Grab the Compare button from the DOM
-  const btn = document.getElementById("compare-calendar-btn");
-
-  // Safety check: button not found = do nothing
-  if (!btn) {
-    console.warn("Compare calendar button not found");
-    return;
-  }
-
-  // Attach click listener
-  btn.addEventListener("click", async () => {
-
-    // Ask user who they want to compare calendars with
-    const otherUsername = prompt("Compare calendar with who?");
-
-    if (!otherUsername) return;
-
-    // Get logged-in user's info
-    const username = sessionStorage.getItem("username");
-    const accessToken = sessionStorage.getItem("accessToken");
-
-    // Must be logged in
-    if (!username || !accessToken) {
-      alert("You must be logged in to compare calendars.");
-      return;
-    }
-
-    try {
-      // Call Electron IPC to compare calendars
-      const result = await window.electronAPI.compareCalendars(
-        username,
-        otherUsername,
-        accessToken
-      );
-
-      // No conflicts found
-      if (!result.conflicts || result.conflicts.length === 0) {
-        alert(`No conflicts with ${otherUsername}.`);
-        return;
-      }
-
-      // Build readable output for conflicts
-      const text = result.conflicts
-        .map(c =>
-          `YOU: ${c.me.eventName}
-${new Date(c.me.start).toLocaleString()} – ${new Date(c.me.end).toLocaleString()}
-
-THEM: ${c.them.eventName}
-${new Date(c.them.start).toLocaleString()} – ${new Date(c.them.end).toLocaleString()}
-
-OVERLAP:
-${new Date(c.overlap.start).toLocaleString()} – ${new Date(c.overlap.end).toLocaleString()}
-`
-        )
-        .join("\n------------------------\n");
-
-      // Display conflicts
-      alert(text);
-
-    } catch (err) {
-      console.error("Compare failed:", err);
-      alert("Failed to compare calendars.");
-    }
-  });
-}
