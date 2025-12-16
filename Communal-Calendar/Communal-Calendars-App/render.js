@@ -342,8 +342,6 @@ async function LoadUserData() {
   await getCategories(username);
   await getEvents(username);
   await getFriends(username, accessToken);
-  await getRSVP(username, accessToken);
-  await loadUserCalendar();
 
   const form = document.getElementById("get-calendar-data");
   const request = document.getElementById("request-friend demo2");
@@ -514,7 +512,6 @@ const calendarBox = document.getElementById("calendarBox");
         
         // Update UI to show Sign In button again
         updateUserDisplay(null);
-        drawCalendar()
         
         console.log("Signed out successfully");
       } catch (error) {
@@ -548,6 +545,8 @@ async function checkSavedUserOnStart() {
       
       // Load user's calendar data
       LoadUserData();
+      
+      loadUserCalendar();
 
       return true;
     } else {
@@ -591,7 +590,6 @@ async function loginUser(username, password) {
     
     // Load user's calendar data
     LoadUserData();
-
     
     return { accessToken, refreshToken };
   } catch (err) {
@@ -679,54 +677,44 @@ async function getEvents(username, accessToken) {
 
 async function getRSVP(username, accessToken){
   try{
-    const username = window.sessionStorage.getItem("username")
-    const accessToken = window.sessionStorage.getItem("accessToken")
-    console.log("items from get RSVP")
-    const rsvp = await window.electronAPI.getRSVP(username, accessToken);
-    console.log(rsvp);
+    const rsvp = await window.electronAPI.getRSVP(username, accesstoken);
+
     for( let item of rsvp ){
-      console.log(item)
+      container = document.createElement("div");
+      title = document.createElement("h2");
+      date = document.createElement("h3");
+      time = document.createElement("h3");
+      days = document.createElement("p");
+      buttoncontainer = document.createElement("div")
+      accept = document.createElement("button");
+      decline = document.createElement("button");
 
-      let rsvpEvent = item.event
-      let container = document.createElement("div");
-      let title = document.createElement("h2");
-      let date = document.createElement("h3");
-      let time = document.createElement("h3");
-      let days = document.createElement("p");
-      let buttoncontainer = document.createElement("div")
-      let accept = document.createElement("button");
-      let decline = document.createElement("button");
-
-      title.textContent = `${rsvpEvent.eventName} From ${item.username}`
-      date.textContent = `${rsvpEvent.startDate} - ${rsvpEvent.endDate}`;
-      time.textContent = `${rsvpEvent.startTime} - ${rsvpEvent.endTime}`;
+      title.textContent = `${item.newEvent.eventName} From ${item.username}`
+      date.textContent = `${item.startDate} - ${item.endDate}`;
+      time.textContent = `${item.startTime} - ${item.endTime}`;
 
       accept.textContent = "Accept";
-      decline.textContent = "Decline";
+      deny.textContent = "Deny";
       accept.setAttribute("response", true)
-      decline.setAttribute("response", false)
-      accept.setAttribute("inviter", item.username)
-      decline.setAttribute("inviter", item.username)
-      accept.setAttribute("event", rsvpEvent.eventName)
-      decline.setAttribute("event", rsvpEvent.eventName)
+      deny.setAttribute("response", false)
+      accept.setAttribute("event", item.newEvent.eventName)
+      deny.setAttribute("event", item.newEvent.eventName)
       accept.addEventListener("click", respondRSVP)
-      decline.addEventListener("click", respondRSVP)
+      deny.addEventListener("click", respondRSVP)
 
       container.appendChild(title);
       container.appendChild(date);
       container.appendChild(time);
       container.appendChild(days);
-      container.appendChild(buttoncontainer)
 
       buttoncontainer.appendChild(accept);
-      buttoncontainer.appendChild(decline);
+      buttoncontainer.appendChild(deny);
 
-      const rsvpSection = document.getElementById("rsvp-content");
-      rsvpSection.appendChild(container);
+
     }
   }
   catch(err){
-    console.log("could not load RSVPS",err)
+
   }
 }
 
@@ -734,22 +722,10 @@ async function respondRSVP(e){
   try{
     const accessToken = window.sessionStorage.getItem("accessToken");
     const username = window.sessionStorage.getItem("username");
-    const button = e.currentTarget;
-    console.log(button)
-    let stat = button.getAttribute("response");
-    let events = button.getAttribute("event");
-    let inviter = button.getAttribute("inviter")
-    console.log(stat);
-    console.log(events);
-
-    const response = await window.electronAPI.respondRSVP(username, inviter, stat, events, accessToken);
-
-    const rsvpSection = document.getElementById("rsvp-content");
-    rsvpSection.innerHTML = "";
-
-    getEvents(username, accessToken);
-    getRSVP(username, accessToken);
-    return response
+    button = e.currentTarget;
+    stat = button.getAttribute("response");
+    events = button.getAttribute("event");
+    let response = await window.electronAPI.respondRSVP(username, stat, events, accessToken);
   }catch(err){
 
   }
@@ -929,7 +905,7 @@ async function requestFriend(e) {
     const searchFriend = document.getElementById("friend-request-search")
     const accessToken = window.sessionStorage.getItem("accessToken");
     const requestee = searchFriend.value;
-    const requester = window.sessionStorage.getItem("username");
+    const requester = sessionStorage.getItem("username");
     console.log(requester);
     console.log(requestee);
     
@@ -1250,7 +1226,7 @@ const friends = Array.from(
   }
 }
 
-function drawCalendar(events = []) {
+function drawCalendar(events) {
     console.log("drawCalendar() called");
     console.log("Received events:", JSON.stringify(events, null, 2));
 
