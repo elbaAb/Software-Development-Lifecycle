@@ -344,6 +344,7 @@ async function LoadUserData() {
   await getFriends(username, accessToken);
   await getRSVP(username, accessToken);
   await loadUserCalendar();
+  await searchCalendar();
 
   const form = document.getElementById("get-calendar-data");
   const request = document.getElementById("request-friend demo2");
@@ -915,7 +916,7 @@ async function toggleFriendEvents(e) {
 
   // If ON: fetch friend's events and draw onto friendsBox overlay
   try {
-    const friendEvents = await fetchEvents(friendName);
+    let friendEvents = await fetchEvents(friendName);
     drawFriendCalendar(friendName, friendEvents);
   } catch (err) {
     console.error("Failed to load friend's events:", friendName, err);
@@ -1284,6 +1285,7 @@ function drawCalendar(events = []) {
         console.log("---- EVENT:", event.eventName);
 
         event.eventDates.forEach(date => {
+
             console.log("Raw date object:", date);
 
             const start = new Date(date.start);
@@ -1322,6 +1324,8 @@ function drawCalendar(events = []) {
             console.log("Appending block:", block);
 
             calendarBox.appendChild(block);
+
+            const today = new Date();
         });
     });
 
@@ -1413,7 +1417,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (!searchInput || !todayEventDiv) return;
 
-  searchInput.addEventListener("input", async () => {
+  searchInput.addEventListener("input", searchCalendar);
+});
+
+
+async function searchCalendar(){
+  const searchInput = document.getElementById("events-search");
+  const todayEventDiv = document.getElementById("today-event");
+  
     const query = searchInput.value.toLowerCase().trim();
 
     const username = sessionStorage.getItem("username");
@@ -1450,5 +1461,4 @@ document.addEventListener("DOMContentLoaded", () => {
       item.classList.add("event-item");
       todayEventDiv.appendChild(item);
     });
-  });
-});
+}

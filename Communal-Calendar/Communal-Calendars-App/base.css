@@ -786,3 +786,12 @@ input[type="radio"], input[type="checkbox"]{
     display: flex;
     flex-direction: row;
 }
+
+#today-event > div{
+    margin: 5px 4px;
+    border: 2px solid #1f1f1f;
+    border-radius: 6px;
+    padding: 3px;
+    background-color: #545454;
+
+}
