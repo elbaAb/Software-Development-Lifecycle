@@ -162,6 +162,7 @@ ipcMain.handle("login-user", async (event, { username, password }) => {
     }, {
       headers: { "Content-Type": "application/json" }
     });
+    console.log(response);
     return response.data; // { accessToken, refreshToken, message }
   } catch (err) {
     console.error("Login failed:", err.message);
@@ -343,6 +344,7 @@ ipcMain.handle("change-favorite", async (event, {username, friend, accessToken})
       Authorization: `Bearer ${accessToken}`
       }
     })
+    console.log(response)
     return response.data;
   }catch(err){
     console.log(err);
@@ -378,6 +380,8 @@ ipcMain.handle("get-requests", async (event, {username, accessToken}) => {
       Authorization: `Bearer ${accessToken}`
       }
     })
+
+    console.log("RESPONSE:", response);
     return response.data;
   }catch(err){
     console.log(err);
@@ -393,21 +397,19 @@ ipcMain.handle("get-rsvp", async (event, {username, accessToken}) => {
       Authorization: `Bearer ${accessToken}`
       }
     })
-
-    return response.data;
+    console.log(response);
+    return response;
 
   }catch(err){
     console.log(err)
   }
 })
 
-ipcMain.handle("respond-rsvp", async (event, { username, inviter, stat, events, accessToken }) => {
+ipcMain.handle("respond-rsvp", async (event, { username, stat, events, accessToken }) => {
   try{
-    console.log("Before respond RSVP")
     const response = await axios.post(`${server}/calendar/respondrsvp`,
       {
         username,
-        inviter,
         stat,
         events,
       },
@@ -417,9 +419,8 @@ ipcMain.handle("respond-rsvp", async (event, { username, inviter, stat, events, 
         Authorization: `Bearer ${accessToken}`
         }
       })
-      
-    console.log("after respond RSVP")
-    return response.data;
+    console.log(response);
+    return response;
   }catch(err){
     console.log(err);
   }
