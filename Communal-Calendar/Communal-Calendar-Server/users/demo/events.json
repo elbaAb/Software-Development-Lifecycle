@@ -1,18 +1,123 @@
 [
   {
-    "eventName": "Event1",
-    "startDate": "2025-12-14",
-    "endDate": "2025-12-14",
-    "startTime": "09:00",
-    "endTime": "10:00",
+    "eventName": "New Event Just Dropped",
+    "startDate": "2025-12-15",
+    "endDate": "2025-12-15",
+    "startTime": "00:00",
+    "endTime": "01:00",
+    "privacy": "public",
+    "repeat": "none",
+    "friends": [
+      {
+        "username": "demo2",
+        "status": "true"
+      },
+      {
+        "username": "demo3",
+        "status": "true"
+      }
+    ],
+    "eventDates": [
+      {
+        "start": "12/15/2025, 12:00:00 AM",
+        "end": "12/15/2025, 1:00:00 AM"
+      }
+    ],
+    "inviter": "demo"
+  },
+  {
+    "eventName": "Event4",
+    "startDate": "2025-12-16",
+    "endDate": "2025-12-16",
+    "startTime": "00:00",
+    "endTime": "01:00",
+    "privacy": "public",
+    "repeat": "none",
+    "friends": [
+      {
+        "username": "demo",
+        "status": "true"
+      },
+      {
+        "username": "demo3",
+        "status": "true"
+      }
+    ],
+    "eventDates": [
+      {
+        "start": "12/16/2025, 12:00:00 AM",
+        "end": "12/16/2025, 1:00:00 AM"
+      }
+    ],
+    "inviter": "demo"
+  },
+  {
+    "eventName": "Event NEW!!!",
+    "startDate": "2025-12-18",
+    "endDate": "2025-12-18",
+    "startTime": "01:00",
+    "endTime": "02:00",
+    "privacy": "public",
+    "repeat": "none",
+    "friends": [
+      {
+        "username": "demo",
+        "status": "false"
+      },
+      {
+        "username": "demo2",
+        "status": "true"
+      }
+    ],
+    "eventDates": [
+      {
+        "start": "12/18/2025, 1:00:00 AM",
+        "end": "12/18/2025, 2:00:00 AM"
+      }
+    ],
+    "inviter": "demo"
+  },
+  {
+    "eventName": "sobs agresskively",
+    "startDate": "2025-12-17",
+    "endDate": "2025-12-17",
+    "startTime": "03:00",
+    "endTime": "04:00",
+    "privacy": "public",
+    "repeat": "none",
+    "friends": [
+      {
+        "username": "demo",
+        "status": "true"
+      },
+      {
+        "username": "demo3",
+        "status": "false"
+      }
+    ],
+    "eventDates": [
+      {
+        "start": "12/17/2025, 3:00:00 AM",
+        "end": "12/17/2025, 4:00:00 AM"
+      }
+    ],
+    "inviter": "demo2"
+  },
+  {
+    "eventName": "a",
+    "startDate": "2025-12-21",
+    "endDate": "2025-12-21",
+    "startTime": "04:00",
+    "endTime": "05:00",
     "privacy": "public",
     "repeat": "none",
     "friends": [],
     "eventDates": [
       {
-        "start": "12/14/2025, 9:00:00 AM",
-        "end": "12/14/2025, 10:00:00 AM"
+        "start": "12/21/2025, 4:00:00 AM",
+        "end": "12/21/2025, 5:00:00 AM"
       }
-    ]
+    ],
+    "inviter": "demo"
   }
 ]
