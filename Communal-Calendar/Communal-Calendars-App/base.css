@@ -429,7 +429,7 @@ body{
     background-color: color-mix(in srgb, var(--primaryColor) 90%, white 10%);
     margin-bottom: 5px;
 }
-.rsvp-content{
+#rsvp-content{
     display: flex;
     flex-direction: column;
     width: 100%;
@@ -437,7 +437,7 @@ body{
     overflow-y: scroll;
     align-items: center;
 } 
-.rsvp-content > div{
+#rsvp-content > div{
     background-color: rgba(255, 0, 0, 0.25);
     border: 2px solid;
     border-radius: 6px;

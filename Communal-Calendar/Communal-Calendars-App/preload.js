@@ -28,5 +28,5 @@ contextBridge.exposeInMainWorld("electronAPI", {    //exposes certain api featur
   loadProfilePicture: () => ipcRenderer.invoke("load-profile-picture"),
   compareCalendars: (me, them, accessToken) => ipcRenderer.invoke("compare-calendars", { me, them, accessToken }),
   getRSVP: (username, accessToken) => ipcRenderer.invoke("get-rsvp", { username, accessToken }),
-  respondRSVP: (username, stat, events, accessToken) => ipcRenderer.invoke("respond-rsvp", { username, stat, events, accessToken })
+  respondRSVP: (username, inviter, stat, events, accessToken) => ipcRenderer.invoke("respond-rsvp", { username, inviter, stat, events, accessToken })
 })

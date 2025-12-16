@@ -1,1 +1,80 @@
-[]
+[
+  {
+    "eventName": "Event2343",
+    "startDate": "2025-12-17",
+    "endDate": "2025-12-17",
+    "startTime": "00:00",
+    "endTime": "01:00",
+    "privacy": "public",
+    "repeat": "none",
+    "friends": [
+      {
+        "username": "demo",
+        "status": "true"
+      },
+      {
+        "username": "demo2",
+        "status": "true"
+      }
+    ],
+    "eventDates": [
+      {
+        "start": "12/17/2025, 12:00:00 AM",
+        "end": "12/17/2025, 1:00:00 AM"
+      }
+    ],
+    "inviter": "demo3"
+  },
+  {
+    "eventName": "NEW EVENT!!!",
+    "startDate": "2025-12-16",
+    "endDate": "2025-12-16",
+    "startTime": "02:00",
+    "endTime": "03:00",
+    "privacy": "public",
+    "repeat": "none",
+    "friends": [
+      {
+        "username": "demo",
+        "status": "true"
+      },
+      {
+        "username": "demo2",
+        "status": "true"
+      }
+    ],
+    "eventDates": [
+      {
+        "start": "12/16/2025, 2:00:00 AM",
+        "end": "12/16/2025, 3:00:00 AM"
+      }
+    ],
+    "inviter": "demo3"
+  },
+  {
+    "eventName": "l;ast event >:(",
+    "startDate": "2025-12-19",
+    "endDate": "2025-12-19",
+    "startTime": "02:00",
+    "endTime": "03:00",
+    "privacy": "public",
+    "repeat": "none",
+    "friends": [
+      {
+        "username": "demo",
+        "status": "true"
+      },
+      {
+        "username": "demo2",
+        "status": "true"
+      }
+    ],
+    "eventDates": [
+      {
+        "start": "12/19/2025, 2:00:00 AM",
+        "end": "12/19/2025, 3:00:00 AM"
+      }
+    ],
+    "inviter": "demo3"
+  }
+]
