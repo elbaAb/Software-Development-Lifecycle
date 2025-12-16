@@ -774,7 +774,7 @@ async function getFriends(username, accessToken) {
     console.log(window.sessionStorage.getItem("friends"))
 
     let content = document.getElementById("friends-dropdown-content");
-    let rsvpFriends = document.getElementById("search-friends-section");
+    let rsvpFriends = document.getElementById("search-friends-section") || document.createElement("div");
 
     content.innerHTML = "";     
     rsvpFriends.innerHTML = "";
