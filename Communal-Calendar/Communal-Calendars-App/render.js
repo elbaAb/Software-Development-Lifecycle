@@ -508,9 +508,7 @@ const calendarBox = document.getElementById("calendarBox");
 
         // clear these so if you relogin it doesn't refill them
         let content = document.getElementById("friends-dropdown-content");
-        let rsvpFriends = document.getElementById("search-friends-section");
         content.innerHTML = "";     
-        rsvpFriends.innerHTML = "";
         
         // Update UI to show Sign In button again
         updateUserDisplay(null);
@@ -749,6 +747,7 @@ async function respondRSVP(e){
 
     getEvents(username, accessToken);
     getRSVP(username, accessToken);
+    loadUserCalendar();
     return response
   }catch(err){
 
